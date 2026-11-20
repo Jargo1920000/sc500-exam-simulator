@@ -5,6 +5,9 @@
 #   (then turn on sign-in in the Azure portal. See the steps this command prints.)
 #   ./deploy/azure.sh deploy    upload the code and your API key. Run again after any change.
 #   ./deploy/azure.sh logs      watch the app logs.
+#   ./deploy/azure.sh status    show the plan tier, app state and Always On.
+#   ./deploy/azure.sh pause     move the plan to the Free tier (F1) when you stop studying.
+#   ./deploy/azure.sh resume    move it back to the tier it had before pause.
 #   ./deploy/azure.sh delete    remove the web app and its plan.
 set -euo pipefail
 
@@ -21,6 +24,25 @@ NAME_FILE="deploy/.appname"
 app_name() {
   [ -f "$NAME_FILE" ] || { echo "Run './deploy/azure.sh create' first."; exit 1; }
   cat "$NAME_FILE"
+}
+
+PAUSE_FILE="deploy/.paused"   # remembers the tier and Always On setting from before pause
+
+# The plan the app runs on. Read from Azure, so plans made in the portal work too.
+plan_name() {
+  local id
+  id=$(az webapp show -g "$RG" -n "$1" --query appServicePlanId -o tsv)
+  echo "${id##*/}"
+}
+
+plan_sku() {
+  az appservice plan show -g "$RG" -n "$1" --query sku.name -o tsv
+}
+
+# Custom domains on the app. The Free tier does not allow them.
+custom_domains() {
+  az webapp config hostname list -g "$RG" --webapp-name "$1" \
+    --query "[?!ends_with(name, '.azurewebsites.net')].name" -o tsv
 }
 
 case "${1:-}" in
@@ -91,17 +113,80 @@ logs)
   az webapp log tail -g "$RG" -n "$APP"
   ;;
 
+status)
+  APP=$(app_name)
+  az account set --subscription "$SUBSCRIPTION"
+  P=$(plan_name "$APP")
+  echo "App:       $APP ($(az webapp show -g "$RG" -n "$APP" --query state -o tsv))"
+  echo "Plan:      $P ($(plan_sku "$P"))"
+  echo "Always On: $(az webapp config show -g "$RG" -n "$APP" --query alwaysOn -o tsv)"
+  [ -f "$PAUSE_FILE" ] && echo "Paused:    yes. Run './deploy/azure.sh resume' to go back to $(grep '^SKU=' "$PAUSE_FILE" | cut -d= -f2)."
+  ;;
+
+pause)
+  APP=$(app_name)
+  az account set --subscription "$SUBSCRIPTION"
+  P=$(plan_name "$APP")
+  CURRENT=$(plan_sku "$P")
+  if [ "$CURRENT" = "F1" ]; then echo "$P is already on the Free tier (F1)."; exit 0; fi
+
+  DOMAINS=$(custom_domains "$APP")
+  if [ -n "$DOMAINS" ]; then
+    echo "The Free tier does not allow custom domains, and this app has:"
+    echo "$DOMAINS" | sed 's/^/  /'
+    echo "Remove them first (portal > $APP > Custom domains), or leave the app on $CURRENT."
+    exit 1
+  fi
+
+  ALWAYS_ON=$(az webapp config show -g "$RG" -n "$APP" --query alwaysOn -o tsv)
+  printf 'SKU=%s\nALWAYS_ON=%s\n' "$CURRENT" "$ALWAYS_ON" > "$PAUSE_FILE"
+
+  # The Free tier does not support Always On, so turn it off before the move.
+  [ "$ALWAYS_ON" = "true" ] && az webapp config set -g "$RG" -n "$APP" --always-on false -o none
+  echo "Moving $P from $CURRENT to F1."
+  if ! az appservice plan update -g "$RG" -n "$P" --sku F1 -o none; then
+    [ "$ALWAYS_ON" = "true" ] && az webapp config set -g "$RG" -n "$APP" --always-on true -o none
+    rm -f "$PAUSE_FILE"
+    echo "The move failed. The plan stays on $CURRENT. If the error mentions quota, the Free tier has none in this region."
+    exit 1
+  fi
+  echo "Paused. Saved exams, the question bank, settings and sign-in are kept."
+  echo "The app still works on F1, but sleeps when idle and has a daily CPU limit."
+  echo "Run './deploy/azure.sh resume' to go back to $CURRENT."
+  ;;
+
+resume)
+  APP=$(app_name)
+  az account set --subscription "$SUBSCRIPTION"
+  P=$(plan_name "$APP")
+  TARGET=$( [ -f "$PAUSE_FILE" ] && grep '^SKU=' "$PAUSE_FILE" | cut -d= -f2 || echo "$SKU")
+  ALWAYS_ON=$( [ -f "$PAUSE_FILE" ] && grep '^ALWAYS_ON=' "$PAUSE_FILE" | cut -d= -f2 || echo false)
+  CURRENT=$(plan_sku "$P")
+  if [ "$CURRENT" = "$TARGET" ]; then echo "$P is already on $TARGET."; rm -f "$PAUSE_FILE"; exit 0; fi
+
+  echo "Moving $P from $CURRENT to $TARGET."
+  if ! az appservice plan update -g "$RG" -n "$P" --sku "$TARGET" -o none; then
+    echo "The move failed. The plan stays on $CURRENT. If the error mentions quota, request more $TARGET quota for this region."
+    exit 1
+  fi
+  [ "$ALWAYS_ON" = "true" ] && az webapp config set -g "$RG" -n "$APP" --always-on true -o none
+  rm -f "$PAUSE_FILE"
+  echo "Resumed on $TARGET. Allow a minute for the app to start."
+  ;;
+
 delete)
   APP=$(app_name)
-  read -r -p "Delete $APP and the plan $PLAN? Type yes: " OK
+  az account set --subscription "$SUBSCRIPTION"
+  P=$(plan_name "$APP")
+  read -r -p "Delete $APP and the plan $P? Type yes: " OK
   [ "$OK" = "yes" ] || exit 0
   az webapp delete -g "$RG" -n "$APP"
-  az appservice plan delete -g "$RG" -n "$PLAN" --yes
-  rm -f "$NAME_FILE"
+  az appservice plan delete -g "$RG" -n "$P" --yes
+  rm -f "$NAME_FILE" "$PAUSE_FILE"
   echo "Deleted. Also delete the app registration: Entra admin center > App registrations > $APP."
   ;;
 
 *)
-  sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
   ;;
 esac
