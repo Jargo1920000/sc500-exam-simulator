@@ -358,8 +358,24 @@ In the portal, open the web app, then **Settings > Authentication > Add identity
 
 ```bash
 bash deploy/azure.sh logs      # stream the app logs
+bash deploy/azure.sh status    # plan tier, app state and Always On
 bash deploy/azure.sh delete    # remove the web app and its plan
 ```
+
+### Save money between study sessions
+
+Azure bills the App Service plan, not the app. Stopping the app saves nothing. To cut the cost, move the plan to the Free tier when you stop studying:
+
+```bash
+bash deploy/azure.sh pause     # move the plan to F1
+bash deploy/azure.sh resume    # move it back to the tier it had before
+```
+
+- `pause` remembers the tier and the Always On setting in `deploy/.paused`. `resume` puts both back.
+- Saved exams, the question bank, app settings and sign-in all stay.
+- The app still works on F1, but it sleeps when idle and has a daily CPU limit.
+- The Free tier doesn't allow custom domains. If the app has one, `pause` stops and tells you to remove it first.
+- If the move fails, for example on a quota error, the plan stays where it was.
 
 After `delete`, also remove the app registration in the Entra admin center.
 
