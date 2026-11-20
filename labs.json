@@ -1,0 +1,1271 @@
+{
+ "resource_group": "rg-sc500-lab",
+ "location": "uksouth",
+ "tag": "Purpose = SC-500 Lab",
+ "labs": [
+  {
+   "id": "identity",
+   "n": 1,
+   "area": "Manage identity, access, and governance",
+   "section": "Secure access to resources by using Microsoft Entra ID",
+   "terraform": true,
+   "scenario": "Contoso runs its lab in one resource group. Admins hold standing Contributor access and sign in with passwords only. You must move to just-in-time access, strong sign-in, and workload identities with no stored secrets.",
+   "deploys": [
+    "User-assigned managed identity id-sc500-lab-<suffix>"
+   ],
+   "cost": "Free",
+   "cleanup": [
+    "Delete the test app registration sc500-lab-app.",
+    "Delete or disable the SC500-Lab Conditional Access policies.",
+    "Remove PIM eligible assignments you made on the resource group."
+   ],
+   "tasks": [
+    {
+     "objective": "Implement and configure Privileged Identity Management (PIM)",
+     "kind": "tenant",
+     "steps": [
+      "Open the Entra admin center. Go to ID Governance, then Privileged Identity Management, then Azure resources.",
+      "Select your subscription, then the resource group rg-sc500-lab.",
+      "Add an assignment: role Contributor, type Eligible, for a test user, for 1 month.",
+      "Open Settings for the Contributor role. Set a 2 hour maximum, and require MFA, a reason, and approval on activation.",
+      "Sign in as the test user, activate the role, and then find the event in Resource audit."
+     ],
+     "note": "Needs Microsoft Entra ID P2 or ID Governance.",
+     "check": "The user holds Contributor only while the activation is live."
+    },
+    {
+     "objective": "Implement conditional access policies",
+     "kind": "tenant",
+     "steps": [
+      "Go to Entra ID, then Conditional Access, then Policies. Select New policy.",
+      "Name it SC500-Lab Require MFA for Azure management. Include All users. Exclude your break-glass accounts.",
+      "Target resource: Windows Azure Service Management API. Grant: Require multifactor authentication.",
+      "Set Enable policy to Report-only and create it.",
+      "Use the What If tool with your own account and the Azure portal to see which policies apply."
+     ],
+     "note": "Needs Microsoft Entra ID P1.",
+     "check": "What If lists your policy under 'Policies that will apply'."
+    },
+    {
+     "objective": "Implement and configure authentication methods, including multifactor authentication (MFA) and passwordless",
+     "kind": "tenant",
+     "steps": [
+      "Go to Entra ID, then Authentication methods, then Policies.",
+      "Enable Passkey (FIDO2) for a pilot group. Enable Temporary Access Pass for the same group.",
+      "Open Authentication strengths. Compare MFA, Passwordless MFA and Phishing-resistant MFA.",
+      "Issue a Temporary Access Pass to a test user and use it to register a passkey."
+     ],
+     "note": null,
+     "check": "The test user can sign in with no password."
+    },
+    {
+     "objective": "Implement and configure identity for applications, including enterprise applications and app registrations",
+     "kind": "tenant",
+     "steps": [
+      "Go to App registrations. Create sc500-lab-app as single tenant.",
+      "Under Certificates & secrets, add a client secret with the shortest expiry. Note why a certificate or a federated credential is safer.",
+      "Open the matching Enterprise application. Under Properties, set Assignment required to Yes.",
+      "Under Users and groups, assign one user. Explain the difference between the app registration and the enterprise application (service principal)."
+     ],
+     "note": null,
+     "check": "Only the assigned user can get a token for the app."
+    },
+    {
+     "objective": "Manage OAuth permission grants and consent settings",
+     "kind": "tenant",
+     "steps": [
+      "Go to Enterprise applications, then Consent and permissions, then User consent settings.",
+      "Choose 'Allow user consent for apps from verified publishers, for selected permissions'.",
+      "Under Admin consent settings, turn on the admin consent workflow and add yourself as a reviewer.",
+      "Open sc500-lab-app, then Permissions. Add User.Read as a delegated permission, grant admin consent, then revoke it."
+     ],
+     "note": null,
+     "check": "You can say who may consent to what, and where to revoke a grant."
+    },
+    {
+     "objective": "Implement and configure managed identities for Azure resources",
+     "kind": "azure",
+     "steps": [
+      "In the Azure portal, open rg-sc500-lab and find id-sc500-lab-<suffix>.",
+      "On rg-sc500-lab, open Access control (IAM) and assign the Reader role to that managed identity.",
+      "If the VM lab is deployed, open vm-sc500-lab, then Identity. Note it has a system-assigned identity. Add the user-assigned one too.",
+      "List when you would pick system-assigned and when user-assigned."
+     ],
+     "note": null,
+     "check": "Run: az role assignment list -g rg-sc500-lab --query \"[?principalType=='ServicePrincipal'].[principalName,roleDefinitionName]\" -o table"
+    }
+   ]
+  },
+  {
+   "id": "keyvault",
+   "n": 2,
+   "area": "Manage identity, access, and governance",
+   "section": "Secure secrets and keys by using Azure Key Vault",
+   "terraform": true,
+   "scenario": "A new key vault holds the secrets for a payment app. It uses Azure RBAC but its firewall allows every network. Lock it down and prove who can read what.",
+   "deploys": [
+    "Key Vault kv-sc500-<suffix> (Azure RBAC, firewall open)",
+    "Diagnostic setting that sends audit logs to Log Analytics"
+   ],
+   "cost": "Pennies",
+   "cleanup": [
+    "Do NOT turn on purge protection. Terraform could not purge the vault and the name would stay taken.",
+    "Turn the Defender for Key Vault plan off if you turned it on."
+   ],
+   "tasks": [
+    {
+     "objective": "Deploy Key Vault",
+     "kind": "azure",
+     "steps": [
+      "Open terraform/modules/sc500-labs/lab02_keyvault.tf and read each setting.",
+      "In the portal, open kv-sc500-<suffix>. Confirm the region is UK South and the tag Purpose is SC-500 Lab.",
+      "Note the SKU. Say what the premium SKU adds (HSM-backed keys)."
+     ],
+     "note": null,
+     "check": "terraform output lab_resources shows the vault name."
+    },
+    {
+     "objective": "Configure Key Vault settings",
+     "kind": "azure",
+     "steps": [
+      "Open Properties. Find soft delete and its retention of 7 days.",
+      "Find purge protection. Read what it does. Leave it off in this lab. Once on, nobody can turn it off.",
+      "Open Access configuration. Note the three 'Resource access' boxes for VMs, ARM templates and disk encryption."
+     ],
+     "note": null,
+     "check": "You can explain soft delete versus purge protection."
+    },
+    {
+     "objective": "Configure access to Key Vault",
+     "kind": "azure",
+     "steps": [
+      "Try to create a secret. It fails, because Azure RBAC gives you no data plane role yet.",
+      "Open Access control (IAM). Assign yourself Key Vault Administrator. Wait a minute and try again.",
+      "Create a secret named db-password. Open that secret and use its own IAM page to give the lab managed identity Key Vault Secrets User.",
+      "Compare this with the older access policy model, which cannot scope to one secret."
+     ],
+     "note": null,
+     "check": "The managed identity can read db-password and nothing else."
+    },
+    {
+     "objective": "Configure firewall settings on Key Vault",
+     "kind": "azure",
+     "steps": [
+      "Open Networking. Choose 'Allow public access from specific virtual networks and IP addresses'.",
+      "Add your client IP address. Keep 'Allow trusted Microsoft services to bypass this firewall' ticked.",
+      "Save. Then remove your IP and try to list secrets. Read the error. Add your IP back."
+     ],
+     "note": null,
+     "check": "With your IP removed, the portal shows a Forbidden error from the firewall."
+    },
+    {
+     "objective": "Manage keys, secrets, and certificates",
+     "kind": "azure",
+     "steps": [
+      "Add a new version of db-password with an expiry date. View both versions.",
+      "Under Keys, generate an RSA 2048 key. Open Rotation policy and set automatic rotation.",
+      "Under Certificates, generate a self-signed certificate. Note the key and secret that appear with it."
+     ],
+     "note": null,
+     "check": "The key shows a rotation policy and the secret shows two versions."
+    },
+    {
+     "objective": "Scan for secrets by using Defender Cloud Security Posture Management (Defender CSPM)",
+     "kind": "azure",
+     "steps": [
+      "In Defender for Cloud, open Environment settings, then your subscription.",
+      "Open the Defender CSPM plan settings. Find agentless scanning for machines, which includes secrets scanning.",
+      "Open Recommendations and search for 'secrets'. Open Cloud Security Explorer and try the template for machines with plaintext secrets."
+     ],
+     "note": "Defender CSPM is a paid plan. You can read the settings without turning it on.",
+     "check": "You know which plan finds secrets and where the findings show."
+    },
+    {
+     "objective": "Implement Defender for Key Vault",
+     "kind": "azure",
+     "steps": [
+      "In Defender for Cloud, open Environment settings, then your subscription. Turn the Key Vault plan on.",
+      "Open Security alerts, then Sample alerts. Create sample alerts for Key Vault only.",
+      "Open one alert. Read the MITRE tactic and the response steps. Turn the plan off when done."
+     ],
+     "note": "Billed per vault. Small, but turn it off after the lab.",
+     "check": "A sample Key Vault alert shows in Security alerts."
+    }
+   ]
+  },
+  {
+   "id": "governance",
+   "n": 3,
+   "area": "Manage identity, access, and governance",
+   "section": "Implement governance to enforce security and regulatory compliance",
+   "terraform": true,
+   "scenario": "An audit found resources in the wrong region, broad role assignments and no guard on backups. Put guardrails on the lab resource group and show the evidence.",
+   "deploys": [
+    "Policy assignment: Allowed locations = UK South (deny)",
+    "Custom policy that audits storage shared key access, plus its assignment",
+    "Custom role SC500 Lab VM Operator",
+    "Empty Recovery Services vault rsv-sc500-lab-<suffix>"
+   ],
+   "cost": "Free",
+   "cleanup": [
+    "Remove every resource lock you added. A lock makes terraform destroy fail.",
+    "Set immutability on the Recovery Services vault back to Disabled. Never choose Locked.",
+    "Delete the Resource Guard if you made one.",
+    "Remove role assignments you made for the custom role."
+   ],
+   "tasks": [
+    {
+     "objective": "Implement and configure security controls by using Azure Policy, including built-in and custom policy definitions",
+     "kind": "azure",
+     "steps": [
+      "Open Policy, then Assignments. Set the scope to rg-sc500-lab. Find the two SC-500 Lab assignments.",
+      "Try to create a storage account in West Europe inside rg-sc500-lab. Read the deny message.",
+      "Open Definitions, filter by category SC-500 Lab, and read the custom rule JSON.",
+      "Assign the built-in policy 'Secure transfer to storage accounts should be enabled' to the resource group yourself. Then open Compliance."
+     ],
+     "note": null,
+     "check": "The West Europe deployment fails with RequestDisallowedByPolicy."
+    },
+    {
+     "objective": "Evaluate regulatory compliance by using Microsoft Defender for Cloud",
+     "kind": "azure",
+     "steps": [
+      "Open Defender for Cloud, then Regulatory compliance.",
+      "Open Microsoft cloud security benchmark. Expand one failing control and open a failing assessment.",
+      "Download a report with Download report."
+     ],
+     "note": null,
+     "check": "You can name one failing control and the resource behind it."
+    },
+    {
+     "objective": "Implement and configure security controls in Defender for Cloud, including security standards and recommendations",
+     "kind": "azure",
+     "steps": [
+      "Open Environment settings, then your subscription, then Security policies. See which standards apply.",
+      "Open Recommendations. Pick one for a lab resource. Read the remediation steps.",
+      "Create an exemption for it scoped to the lab resource group, with type Waiver and an expiry date. Then delete the exemption."
+     ],
+     "note": null,
+     "check": "The recommendation shows the resource as exempt, then unhealthy again."
+    },
+    {
+     "objective": "Implement resource locks",
+     "kind": "azure",
+     "steps": [
+      "Open rsv-sc500-lab-<suffix>, then Locks. Add a Delete lock named lab-lock.",
+      "Try to delete the vault. Read the error. Do not retry.",
+      "Change the lock to Read-only on a storage account if the storage lab is deployed. Try to list its keys. Read why it fails.",
+      "Remove all locks."
+     ],
+     "note": null,
+     "check": "No locks remain: az lock list -g rg-sc500-lab -o table"
+    },
+    {
+     "objective": "Manage Azure built-in role assignments",
+     "kind": "azure",
+     "steps": [
+      "On rg-sc500-lab, open Access control (IAM), then Role assignments.",
+      "Assign Reader to a test user or to the lab managed identity.",
+      "Use Check access for that principal. Open the Deny assignments tab and note what creates them."
+     ],
+     "note": null,
+     "check": "Check access lists Reader at resource group scope."
+    },
+    {
+     "objective": "Manage custom roles, including Azure roles and Microsoft Entra roles",
+     "kind": "azure",
+     "steps": [
+      "On rg-sc500-lab, open Access control (IAM), then Roles. Find SC500 Lab VM Operator and view its JSON.",
+      "Assign it to a test principal. If the VM lab is deployed, test start and deallocate, then test delete.",
+      "In the Entra admin center, open Roles and admins, then New custom role. Build one that can only update app registration credentials."
+     ],
+     "note": "Entra custom roles need Microsoft Entra ID P1.",
+     "check": "The test principal can restart the VM and cannot delete it."
+    },
+    {
+     "objective": "Evaluate and remediate overprivileged access assignments by using Azure role-based access control (RBAC)",
+     "kind": "azure",
+     "steps": [
+      "Run: az role assignment list --all --include-inherited --query \"[?roleDefinitionName=='Owner' || roleDefinitionName=='Contributor'].[principalName,roleDefinitionName,scope]\" -o table",
+      "Mark each one that sits at subscription scope and could sit at resource group scope.",
+      "Replace one broad assignment with a narrower built-in role, or make it eligible in PIM."
+     ],
+     "note": null,
+     "check": "You removed or narrowed at least one standing assignment."
+    },
+    {
+     "objective": "Configure security controls for backup protection by using Azure Backup security features",
+     "kind": "azure",
+     "steps": [
+      "Open rsv-sc500-lab-<suffix>, then Properties, then Security settings.",
+      "Review soft delete. Note the always-on option.",
+      "Open Immutable vault. Choose Enabled, not Locked. Then set it back to Disabled.",
+      "Read about multi-user authorization. Create a Resource Guard, see which operations it protects, then delete it."
+     ],
+     "note": "Never lock immutability in a lab. It cannot be undone.",
+     "check": "Immutability shows Disabled when you finish."
+    },
+    {
+     "objective": "Implement and configure security controls by using infrastructure as code",
+     "kind": "azure",
+     "steps": [
+      "Change a lab resource in the portal. For example, turn off HTTPS-only somewhere.",
+      "Run terraform plan. Read the drift it reports.",
+      "In lab04_storage.tf, set shared_access_key_enabled to false. Run terraform apply. You fixed a finding in code.",
+      "Note how the Purpose tag, the region rule and the lab switches are enforced in one place."
+     ],
+     "note": null,
+     "check": "terraform plan reports no changes after the apply."
+    }
+   ]
+  },
+  {
+   "id": "storage",
+   "n": 4,
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for storage accounts",
+   "terraform": true,
+   "scenario": "A team stores customer exports in a storage account. It accepts account keys, any network and anonymous blob access. Close each gap without breaking the app.",
+   "deploys": [
+    "Storage account stsc500lab<suffix> with weak settings",
+    "Private container labdata"
+   ],
+   "cost": "Pennies",
+   "cleanup": [
+    "Turn Defender for Storage off if you turned it on."
+   ],
+   "tasks": [
+    {
+     "objective": "Manage access to storage, including access policies",
+     "kind": "azure",
+     "steps": [
+      "Do this task first, while account key access is still on.",
+      "Assign yourself Storage Blob Data Contributor on the account. Upload a small file to labdata.",
+      "On the container, open Access policy. Add a stored access policy named read-1h with Read permission and a 1 hour expiry.",
+      "Create a SAS for the blob that uses that policy. Open the URL. Then delete the policy and open the URL again.",
+      "Create a user delegation SAS. Note that it is signed with Entra credentials, not the account key."
+     ],
+     "note": null,
+     "check": "The SAS stops working the moment you delete the stored access policy."
+    },
+    {
+     "objective": "Implement and configure security for storage accounts",
+     "kind": "azure",
+     "steps": [
+      "Open Configuration. Set 'Allow Blob anonymous access' to Disabled.",
+      "Set 'Allow storage account key access' to Disabled. Note which SAS types still work.",
+      "Open Data protection. Turn on soft delete for blobs and for containers.",
+      "Note that infrastructure encryption can only be chosen at creation."
+     ],
+     "note": null,
+     "check": "az storage account show -g rg-sc500-lab -n <name> --query \"{key:allowSharedKeyAccess,anon:allowBlobPublicAccess}\""
+    },
+    {
+     "objective": "Configure Azure Storage firewall rules",
+     "kind": "azure",
+     "steps": [
+      "Open Networking. Set public network access to 'Enabled from selected virtual networks and IP addresses'.",
+      "Add your client IP. Add the subnet snet-app from vnet-sc500-lab.",
+      "Review Resource instances and the 'trusted Azure services' exception.",
+      "Remove your IP and try to list blobs. Add it back."
+     ],
+     "note": null,
+     "check": "Listing blobs fails with AuthorizationFailure when your IP is not allowed."
+    },
+    {
+     "objective": "Implement Defender for Storage threat protection configurations",
+     "kind": "azure",
+     "steps": [
+      "On the storage account, open Microsoft Defender for Cloud. Turn Defender for Storage on for this account only.",
+      "Turn on on-upload malware scanning and set a monthly cap in GB. Turn on sensitive data threat detection.",
+      "Upload an EICAR test file. Open the blob and read the scan result tag.",
+      "Turn the plan off."
+     ],
+     "note": "Billed per account and per GB scanned. Keep the cap low.",
+     "check": "The blob index tag shows the scan result as Malicious."
+    }
+   ]
+  },
+  {
+   "id": "database",
+   "n": 5,
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for databases",
+   "terraform": true,
+   "scenario": "A reporting database must pass a security review: no SQL passwords, a tight firewall, a full audit trail and threat detection.",
+   "deploys": [
+    "Azure SQL server sql-sc500-lab-<suffix> with Entra-only sign-in (you are the admin)",
+    "Basic database sqldb-sc500-lab"
+   ],
+   "cost": "About \u00a34 a month",
+   "cleanup": [
+    "Turn Defender for SQL off on the server if you turned it on."
+   ],
+   "tasks": [
+    {
+     "objective": "Implement platform-level security configurations in Azure SQL",
+     "kind": "azure",
+     "steps": [
+      "On the server, open Microsoft Entra ID. Confirm 'Support only Microsoft Entra authentication' is on.",
+      "Open Networking. Choose Selected networks and add your client IP as a firewall rule.",
+      "Open the database, then Query editor. Sign in with Entra. Run: SELECT SUSER_NAME();",
+      "Open Transparent data encryption and confirm it is on. Open Dynamic Data Masking and mask one column of a table you create.",
+      "Say how you would remove public access fully (private endpoint, then deny public network access)."
+     ],
+     "note": null,
+     "check": "Query editor signs you in with Entra and no password."
+    },
+    {
+     "objective": "Configure database auditing for Azure SQL Database and Azure SQL Managed Instance",
+     "kind": "azure",
+     "steps": [
+      "On the server, open Auditing. Turn on Azure SQL Auditing and send it to the Log Analytics workspace log-sc500-lab-<suffix>.",
+      "Run a few queries in Query editor.",
+      "In the workspace, run: AzureDiagnostics | where Category == 'SQLSecurityAuditEvents' | take 20",
+      "Read how auditing differs on SQL Managed Instance, where you create a server audit with T-SQL or use diagnostic settings. No instance is deployed, because it costs a lot."
+     ],
+     "note": null,
+     "check": "Your SELECT statements show in the audit rows. Allow 10 minutes."
+    },
+    {
+     "objective": "Configure Defender for Databases protection across Azure database services",
+     "kind": "azure",
+     "steps": [
+      "On the server, open Microsoft Defender for Cloud and enable Microsoft Defender for SQL.",
+      "Open the vulnerability assessment findings. Read one finding and set it as baseline.",
+      "In Defender for Cloud, open Environment settings, then the Databases plan. Select types and note the four resource types it covers.",
+      "Turn the plan off on the server."
+     ],
+     "note": "Billed per server. A free trial may apply.",
+     "check": "You can list the four database types the plan covers."
+    }
+   ]
+  },
+  {
+   "id": "network",
+   "n": 6,
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for Azure network services",
+   "terraform": true,
+   "scenario": "A three-tier app sits in one virtual network. One NSG rule is far too open and storage is still reachable from the internet. Segment the tiers and move storage to private access.",
+   "deploys": [
+    "NSGs nsg-web and nsg-app. nsg-web holds one rule that is too open",
+    "Application security groups asg-web and asg-app",
+    "Storage account stsc500pe<suffix> with a private endpoint and private DNS zone",
+    "Optional: Azure Firewall Basic, when deploy_firewall = true"
+   ],
+   "cost": "About \u00a36 a month for the private endpoint. Azure Firewall Basic adds about \u00a30.30 an hour",
+   "cleanup": [
+    "Delete route tables you made and remove them from subnets.",
+    "Delete the Virtual Network Manager if you made one. Remove its deployment first.",
+    "Set deploy_firewall back to false and apply when you finish the firewall task."
+   ],
+   "tasks": [
+    {
+     "objective": "Evaluate effective security rules by using Azure Network Watcher diagnostics",
+     "kind": "azure",
+     "steps": [
+      "Open Network Watcher, then NSG diagnostics. Target the subnet snet-web or the VM NIC if the VM lab is deployed.",
+      "Test inbound TCP port 22 from source 8.8.8.8. Read which rule allows it.",
+      "If the VM lab is deployed, open the NIC, then Effective security rules. Then try IP flow verify."
+     ],
+     "note": null,
+     "check": "NSG diagnostics names the rule Allow-SSH-In-TOO-OPEN."
+    },
+    {
+     "objective": "Implement and manage network security groups (NSGs) and application security groups (ASGs)",
+     "kind": "azure",
+     "steps": [
+      "In nsg-web, delete Allow-SSH-In-TOO-OPEN.",
+      "In nsg-app, add an inbound rule: source asg-web, destination asg-app, TCP 8080, Allow, priority 100.",
+      "Add a second rule at priority 4000 that denies all other inbound traffic from VirtualNetwork.",
+      "Explain why ASGs beat IP addresses in rules."
+     ],
+     "note": null,
+     "check": "Run NSG diagnostics again. Port 22 from the internet is now denied."
+    },
+    {
+     "objective": "Configure Azure private endpoints to secure access to Azure platform as a service (PaaS) resources",
+     "kind": "azure",
+     "steps": [
+      "Open pe-stsc500pe-blob. Note its private IP in snet-private-endpoints.",
+      "Open the private DNS zone privatelink.blob.core.windows.net. Find the A record.",
+      "On stsc500pe<suffix>, open Networking and set public network access to Disabled.",
+      "From your laptop run nslookup on the blob endpoint. It returns a public IP, and requests are refused. From the lab VM it returns 10.50.4.x."
+     ],
+     "note": null,
+     "check": "The storage account is reachable from inside the virtual network only."
+    },
+    {
+     "objective": "Configure Azure Private Link services to secure access to network resources",
+     "kind": "study",
+     "steps": [
+      "Read the difference: a private endpoint is the consumer side. A Private Link service is the provider side, in front of a Standard Load Balancer.",
+      "In the portal, start Create Private Link service. Walk the wizard to see the fields: load balancer frontend, NAT subnet, visibility and auto-approval.",
+      "Cancel before you create it."
+     ],
+     "note": null,
+     "check": "You can say who approves a connection and where the NAT IP comes from."
+    },
+    {
+     "objective": "Implement and configure Azure Firewall",
+     "kind": "azure",
+     "steps": [
+      "On the Labs page, tick 'Deploy Azure Firewall' and save. Run terraform apply. Allow 10 minutes.",
+      "Open the firewall policy afwp-sc500-lab. Add an application rule that allows *.microsoft.com on HTTPS from 10.50.0.0/16.",
+      "Add a network rule that allows DNS to 168.63.129.16. Set threat intelligence mode to Alert and deny.",
+      "Create a route table with 0.0.0.0/0 to the firewall private IP and attach it to snet-app. Then remove and delete it.",
+      "Untick 'Deploy Azure Firewall', save and run terraform apply."
+     ],
+     "note": "Bills by the hour while deployed.",
+     "check": "terraform output lab_resources shows firewall = not deployed when you finish."
+    },
+    {
+     "objective": "Implement and configure network access policies by using Azure Virtual Network Manager",
+     "kind": "azure",
+     "steps": [
+      "Create a Network Manager named avnm-sc500-lab in UK South. Scope: your subscription. Feature: Security admin.",
+      "Create a network group and add vnet-sc500-lab as a static member.",
+      "Create a security admin configuration with a rule that denies inbound TCP 22 and 3389 from the internet. Deploy it to UK South.",
+      "Compare Allow, Always allow and Deny. Note that security admin rules are checked before NSG rules.",
+      "Remove the deployment, then delete the Network Manager."
+     ],
+     "note": "Add the tag Purpose = SC-500 Lab by hand. Billed per subscription while it exists.",
+     "check": "Effective security rules on a NIC list the security admin rule above the NSG rules."
+    },
+    {
+     "objective": "Configure security for an Azure Virtual WAN",
+     "kind": "study",
+     "steps": [
+      "Do not deploy this. A hub bills by the hour.",
+      "Read how a secured virtual hub puts Azure Firewall in the hub through Firewall Manager.",
+      "Read about routing intent, which sends internet and private traffic through the hub firewall.",
+      "In the portal, start Create Virtual WAN and hub. Walk the wizard, then cancel."
+     ],
+     "note": null,
+     "check": "You can explain secured virtual hub and routing intent in two sentences."
+    },
+    {
+     "objective": "Implement and configure security for virtual private network (VPN) connections",
+     "kind": "study",
+     "steps": [
+      "Do not deploy a gateway. It takes over 30 minutes and bills by the hour.",
+      "Read point-to-site sign-in choices: certificate, RADIUS and Microsoft Entra ID.",
+      "Read how to set a custom IPsec/IKE policy on a site-to-site connection.",
+      "Start Create virtual network gateway. Walk the wizard, then cancel."
+     ],
+     "note": null,
+     "check": "You can pick the right point-to-site sign-in method for a Conditional Access need."
+    },
+    {
+     "objective": "Implement and configure Microsoft Entra Private Access",
+     "kind": "tenant",
+     "steps": [
+      "Open the Entra admin center, then Global Secure Access.",
+      "Under Connect, then Traffic forwarding, find the Private access profile.",
+      "Read the steps: install a private network connector on a server that can reach the app, define Quick Access or a per-app access entry, assign users, and install the client.",
+      "Note how Conditional Access applies per app."
+     ],
+     "note": "Needs a Microsoft Entra Private Access or Entra Suite licence.",
+     "check": "You can list the four parts: client, traffic profile, connector, app segment."
+    }
+   ]
+  },
+  {
+   "id": "ai",
+   "n": 7,
+   "area": "Secure compute",
+   "section": "Implement security for AI",
+   "terraform": true,
+   "scenario": "The business is rolling out Copilot and building agents in Foundry. The Foundry resource still accepts API keys from any network. Secure the data, the agents and the AI platform.",
+   "deploys": [
+    "Foundry (AI Services) resource ais-sc500-lab-<suffix> with key sign-in and public access on",
+    "Diagnostic setting that sends audit logs to Log Analytics"
+   ],
+   "cost": "Free until you deploy and call a model",
+   "cleanup": [
+    "Delete the API Management instance that the AI Gateway wizard created. Terraform does not know about it.",
+    "Delete model deployments and Foundry projects you made.",
+    "Turn the Defender for AI services plan off."
+   ],
+   "tasks": [
+    {
+     "objective": "Enable Defender for AI Service in Cloud Workload Protection in Defender for Cloud",
+     "kind": "azure",
+     "steps": [
+      "In Defender for Cloud, open Environment settings, then your subscription. Turn the AI services plan on.",
+      "Open its Settings. Turn on user prompt evidence.",
+      "As a hardening step in code: in lab07_ai.tf set local_auth_enabled to false and run terraform apply.",
+      "Turn the plan off when you finish the lab."
+     ],
+     "note": "A paid plan. A free trial may apply.",
+     "check": "The AI services plan shows On, and key sign-in is off on the resource."
+    },
+    {
+     "objective": "Configure guardrails for agent security in Foundry",
+     "kind": "azure",
+     "steps": [
+      "Open the Foundry portal at ai.azure.com. Create a project in ais-sc500-lab-<suffix> and deploy one small chat model.",
+      "Go to Build, then Guardrails, then Create Guardrail.",
+      "Add a control: pick a risk such as user prompt attacks, pick the intervention point, and set the action to Annotate and block.",
+      "Assign the guardrail to your model. Use Try in Playground and send a jailbreak-style prompt."
+     ],
+     "note": "Model calls bill per token. A few test prompts cost pennies.",
+     "check": "The playground shows which risk was found and at which intervention point."
+    },
+    {
+     "objective": "Configure and deploy AI Gateway in Azure API Management for Microsoft Foundry",
+     "kind": "azure",
+     "steps": [
+      "In the Foundry portal, go to Manage, then AI Gateway, then Add AI Gateway.",
+      "Select ais-sc500-lab-<suffix>. Choose Create new. This makes a Basic v2 API Management instance.",
+      "Note that 'Use existing' lists v2 tier instances only, so the Consumption instance from the apps lab is not offered.",
+      "Add your project to the gateway and set a token limit. Call the model past the limit and read the 429 response.",
+      "Delete the API Management instance when you finish."
+     ],
+     "note": "Basic v2 bills by the hour. Delete it the same day.",
+     "check": "The gateway shows Enabled and a call over the limit returns 429."
+    },
+    {
+     "objective": "Monitor AI security by using the Data and AI security dashboard in Defender for Cloud",
+     "kind": "azure",
+     "steps": [
+      "In Defender for Cloud, open Data and AI security.",
+      "Find the 'AI closer look' section: AI discovery, AI threat protection and internet-exposed grounding resources.",
+      "Note what the full dashboard needs: Defender CSPM with sensitive data discovery, plus the Storage, Databases and AI services plans."
+     ],
+     "note": null,
+     "check": "Your Foundry resource shows in AI discovery. This can take a day."
+    },
+    {
+     "objective": "Implement conditional access for Microsoft Entra Agent ID",
+     "kind": "tenant",
+     "steps": [
+      "Go to Entra ID, then Conditional Access, then Policies. Select New policy.",
+      "Under Assignments, select 'Users, agents or workload identities'. Choose Agents, then All agent identities.",
+      "Target resources: All resources. Conditions: Agent risk = High. Grant: Block.",
+      "Set Enable policy to Report-only and create it."
+     ],
+     "note": "Needs Microsoft Agent 365 with Entra ID P1, or Microsoft 365 E7.",
+     "check": "The policy exists in Report-only and targets agent identities."
+    },
+    {
+     "objective": "Manage Entra Agent ID access",
+     "kind": "tenant",
+     "steps": [
+      "In the Entra admin center, open Agent ID and list the agent identities and blueprints.",
+      "Open one agent identity. Review its owner or sponsor and the permissions it holds.",
+      "Disable one test agent identity. Note the difference between disabling one object and a tenant-wide Conditional Access block."
+     ],
+     "note": "Menu names may differ. Use the Learn link under Practice.",
+     "check": "You can find who owns an agent and what it can reach."
+    },
+    {
+     "objective": "Analyze blast radius for security risks related to Entra Agent ID by using Defender XDR",
+     "kind": "tenant",
+     "steps": [
+      "In the Defender portal, open the AI agents inventory under Assets.",
+      "Open one agent. Review its identity, tools, data sources and any attack paths.",
+      "In an incident that involves an agent, open the incident graph and review what the agent identity can reach."
+     ],
+     "note": "Needs Defender licences with security for AI agents turned on.",
+     "check": "You can state what an attacker gains if this agent identity is taken over."
+    },
+    {
+     "objective": "Enable and configure real-time protection for Microsoft Copilot Studio agents",
+     "kind": "tenant",
+     "steps": [
+      "In the Defender portal, turn on security for AI agents and connect Copilot Studio.",
+      "In the Power Platform admin center, open Security, then Threat detection, then Additional threat detection.",
+      "Pick an environment and select Set up. Tick 'Allow Copilot Studio to share data with a threat detection provider'.",
+      "Enter the Entra app ID and the endpoint link. Under 'Set error behavior' choose Block the query.",
+      "In Copilot Studio, open Agents and read the Protection status column."
+     ],
+     "note": "Needs Copilot Studio and Defender licences.",
+     "check": "A published agent shows Protected."
+    },
+    {
+     "objective": "Identify risks related to Microsoft Copilot and AI apps by using Microsoft Purview Data Security Posture Management (DSPM)",
+     "kind": "tenant",
+     "steps": [
+      "Open the Microsoft Purview portal, then Data Security Posture Management.",
+      "Finish the get-started steps: turn on audit and create the suggested policies.",
+      "Open Reports. Review sensitive data in AI interactions.",
+      "Run a data risk assessment to find overshared sites."
+     ],
+     "note": "Needs Microsoft Purview licences. Some parts need Microsoft 365 Copilot.",
+     "check": "You can name the top overshared site in the assessment."
+    },
+    {
+     "objective": "Identify overexposure of data in SharePoint",
+     "kind": "tenant",
+     "steps": [
+      "Open the SharePoint admin center, then Reports, then Data access governance.",
+      "Run the sharing links report and the 'Everyone except external users' report.",
+      "Pick one site. Start a site access review, or apply restricted access control."
+     ],
+     "note": "Needs SharePoint Advanced Management, which comes with Microsoft 365 Copilot.",
+     "check": "You have a list of sites shared with everyone."
+    },
+    {
+     "objective": "Manage agents in Microsoft 365 admin center",
+     "kind": "tenant",
+     "steps": [
+      "Open the Microsoft 365 admin center, then Agents.",
+      "Review the agent inventory: who published each agent and who can use it.",
+      "Block one agent, then unblock it. Change who can use one agent to a single group."
+     ],
+     "note": "Needs Microsoft 365 Copilot or Agent 365 licences.",
+     "check": "You can block an agent for the whole tenant in under a minute."
+    }
+   ]
+  },
+  {
+   "id": "vm",
+   "n": 8,
+   "area": "Secure compute",
+   "section": "Implement security for servers and virtual machines (VMs)",
+   "terraform": true,
+   "scenario": "A Linux server has no public IP, which is good. But Secure Boot is off, there is no managed way to reach it, and Defender does not cover it yet.",
+   "deploys": [
+    "Linux VM vm-sc500-lab (Standard_B1s, no public IP, vTPM on, Secure Boot off)",
+    "Daily shutdown at 19:00 UK time",
+    "SSH key pair. The private key is a sensitive Terraform output"
+   ],
+   "cost": "About \u00a37 a month if left on. Less with the daily shutdown",
+   "cleanup": [
+    "Delete Azure Bastion and its public IP. They sit in the lab network and block destroy.",
+    "Delete NSGs you made by hand for just-in-time access.",
+    "Turn the Defender for Servers plan off.",
+    "Remove Machine Configuration policy assignments you made."
+   ],
+   "tasks": [
+    {
+     "objective": "Configure security features on a VM, including secure boot, virtual Trusted Platform Module (vTPM), integrity monitoring, and security type",
+     "kind": "azure",
+     "steps": [
+      "Open vm-sc500-lab, then Configuration. Note the security type is Trusted launch.",
+      "Stop the VM. Tick Secure Boot. Save and start the VM.",
+      "Turn on integrity monitoring. Note that it installs the Guest Attestation extension.",
+      "In code, set secure_boot_enabled = true in lab08_vm.tf so Terraform agrees with the portal."
+     ],
+     "note": null,
+     "check": "az vm show -g rg-sc500-lab -n vm-sc500-lab --query securityProfile"
+    },
+    {
+     "objective": "Plan and implement Azure Bastion",
+     "kind": "azure",
+     "steps": [
+      "Open vm-sc500-lab, then Connect, then Bastion.",
+      "If the portal offers the Developer SKU, deploy that. It is free. If not, read the Basic SKU needs: a /26 subnet named AzureBastionSubnet and a Standard public IP.",
+      "Get the key: terraform output -raw vm_private_key. Connect as labadmin with 'SSH Private Key from Local File'.",
+      "Compare the SKUs: Developer, Basic, Standard and Premium.",
+      "Delete the Bastion host when done."
+     ],
+     "note": "Basic and above bill by the hour.",
+     "check": "You have a shell on the VM with no public IP on it."
+    },
+    {
+     "objective": "Onboard servers to Defender for Servers in Defender for Cloud, including hybrid and multicloud scenarios",
+     "kind": "azure",
+     "steps": [
+      "In Defender for Cloud, open Environment settings, then your subscription. Turn the Servers plan on and choose Plan 2.",
+      "Open Inventory. Find vm-sc500-lab and check that Defender for Servers shows On.",
+      "On the VM, open Extensions. Look for the Defender for Endpoint extension. It can take an hour.",
+      "Read how the same plan covers Arc servers and AWS or GCP machines."
+     ],
+     "note": "Billed per server per hour. A free trial may apply. Turn it off after the lab.",
+     "check": "Inventory shows the VM as protected."
+    },
+    {
+     "objective": "Configure Defender for Servers settings, including vulnerability scanning, and endpoint detection and response (EDR)",
+     "kind": "azure",
+     "steps": [
+      "Open the Servers plan, then Settings.",
+      "Check 'Vulnerability assessment for machines' is on and uses Microsoft Defender Vulnerability Management.",
+      "Check 'Endpoint protection' is on. That is the Defender for Endpoint integration.",
+      "Open Recommendations and find 'Machines should have vulnerability findings resolved'."
+     ],
+     "note": null,
+     "check": "You can name which setting gives EDR and which gives vulnerability scanning."
+    },
+    {
+     "objective": "Implement and manage agentless scanning for VMs in Defender for Servers",
+     "kind": "azure",
+     "steps": [
+      "In the Servers plan Settings, find 'Agentless scanning for machines'. Turn it on.",
+      "Open its configuration. Add an exclusion tag, such as NoScan = true.",
+      "Read how it works: it takes a disk snapshot and scans it outside the VM, about once a day."
+     ],
+     "note": "Needs Defender for Servers Plan 2 or Defender CSPM.",
+     "check": "You can explain why agentless scanning does not slow the VM."
+    },
+    {
+     "objective": "Enable and enforce use of just-in-time (JIT) VM access",
+     "kind": "azure",
+     "steps": [
+      "JIT edits NSG rules, so first create an NSG and attach it to snet-vm.",
+      "In Defender for Cloud, open Workload protections, then Just-in-time VM access.",
+      "On the Not configured tab, select vm-sc500-lab and enable JIT for port 22 with a 1 hour maximum.",
+      "Select Request access. Then open the NSG and read the rule JIT added.",
+      "Delete the NSG when done."
+     ],
+     "note": "Needs Defender for Servers Plan 2.",
+     "check": "The NSG has a deny rule from JIT and a timed allow rule above it."
+    },
+    {
+     "objective": "Implement and configure disk encryption",
+     "kind": "azure",
+     "steps": [
+      "Open the OS disk, then Encryption. Note it uses a platform-managed key.",
+      "Read the options: encryption at host, customer-managed keys through a disk encryption set, and Azure Disk Encryption.",
+      "To try encryption at host: register the feature, deallocate the VM, then tick it under Disks, Additional settings.",
+      "Note that customer-managed keys need a key vault with purge protection, so do not test that with the lab vault."
+     ],
+     "note": null,
+     "check": "az vm show -g rg-sc500-lab -n vm-sc500-lab --query securityProfile.encryptionAtHost"
+    },
+    {
+     "objective": "Enforce security configuration of Azure-managed servers by using Azure Machine Configuration",
+     "kind": "azure",
+     "steps": [
+      "Open Policy. Assign the initiative 'Deploy prerequisites to enable Guest Configuration policies on virtual machines' to rg-sc500-lab. Create a remediation task.",
+      "Assign the policy 'Linux machines should meet requirements for the Azure compute security baseline'.",
+      "After 30 minutes, open the VM, then Configuration management (Machine Configuration). Read the failed settings.",
+      "Remove both assignments when done."
+     ],
+     "note": null,
+     "check": "The VM shows a guest assignment with a compliance state."
+    },
+    {
+     "objective": "Extend security controls to hybrid and multicloud servers by using Azure Arc",
+     "kind": "study",
+     "steps": [
+      "Open Azure Arc, then Machines, then Add. Walk the wizard for a single server and read the script it gives you.",
+      "Optional: run it on a spare machine or a local VM, with UK South as the region and the Purpose tag.",
+      "Note what an Arc server gains: Azure Policy, Machine Configuration, Defender for Servers and Azure Monitor.",
+      "If you onboarded a machine, disconnect it and delete the Arc resource."
+     ],
+     "note": null,
+     "check": "You can explain how an on-premises server gets Defender for Servers."
+    }
+   ]
+  },
+  {
+   "id": "apps",
+   "n": 9,
+   "area": "Secure compute",
+   "section": "Implement security for application platform services",
+   "terraform": true,
+   "scenario": "The web team shipped fast. The web app takes HTTP and FTP, the registry has its admin user on, and the WAF only logs. Fix each one and put an API gateway in front.",
+   "deploys": [
+    "App Service plan (B1) and Linux web app app-sc500-lab-<suffix> with weak settings",
+    "Container registry crsc500lab<suffix> (Basic, admin user on)",
+    "API Management apim-sc500-lab-<suffix> (Consumption)",
+    "WAF policy waf-sc500-lab in Detection mode"
+   ],
+   "cost": "About \u00a314 a month. Most is the App Service plan",
+   "cleanup": [
+    "Delete the AKS cluster, container group, container app, function app and logic app if you made them.",
+    "Turn the Defender for Containers plan off."
+   ],
+   "tasks": [
+    {
+     "objective": "Implement and configure security controls for Azure App Service",
+     "kind": "azure",
+     "steps": [
+      "Open app-sc500-lab-<suffix>, then Configuration. Set HTTPS Only to On. Set FTP state to Disabled.",
+      "Open Authentication. Add Microsoft as the identity provider and require sign-in.",
+      "Open Networking, then Public network access. Allow your IP only.",
+      "Open Identity and turn on a system-assigned identity. Read how Key Vault references use it."
+     ],
+     "note": null,
+     "check": "az webapp show -g rg-sc500-lab -n <name> --query httpsOnly"
+    },
+    {
+     "objective": "Implement and configure security controls for Azure Container Registry",
+     "kind": "azure",
+     "steps": [
+      "Open crsc500lab<suffix>, then Access keys. Turn the admin user off.",
+      "Assign AcrPull on the registry to the lab managed identity.",
+      "Import an image: az acr import -n <name> --source mcr.microsoft.com/azuredocs/aci-helloworld:latest",
+      "Note what needs the Premium SKU: private endpoints, firewall rules and customer-managed keys."
+     ],
+     "note": null,
+     "check": "az acr show -n <name> --query adminUserEnabled returns false."
+    },
+    {
+     "objective": "Detect misconfigurations and runtime risks in container workloads by using Defender for Containers",
+     "kind": "azure",
+     "steps": [
+      "In Defender for Cloud, turn the Containers plan on. Open Settings and read each part: registry scanning, the sensor and agentless discovery.",
+      "Wait for the image you imported to be scanned.",
+      "Open the recommendation about container images in Azure registries having vulnerability findings resolved.",
+      "Turn the plan off."
+     ],
+     "note": "A paid plan. A free trial may apply.",
+     "check": "The imported image lists CVE findings."
+    },
+    {
+     "objective": "Implement and configure Azure Web Application Firewall",
+     "kind": "azure",
+     "steps": [
+      "Open waf-sc500-lab, then Policy settings. Change the mode from Detection to Prevention.",
+      "Under Custom rules, add a rate limit rule, then a geo-match rule that blocks one country.",
+      "Under Managed rules, add an exclusion for one request header.",
+      "Note that the policy takes effect when attached to an Application Gateway WAF v2. None is deployed, because of cost."
+     ],
+     "note": null,
+     "check": "az network application-gateway waf-policy show -g rg-sc500-lab -n waf-sc500-lab --query policySettings.mode"
+    },
+    {
+     "objective": "Implement security policies for back-end API protection by using API Management",
+     "kind": "azure",
+     "steps": [
+      "Open apim-sc500-lab-<suffix>, then APIs. Add an HTTP API that points at your web app URL.",
+      "In the inbound policy, add rate-limit with 5 calls per 60 seconds.",
+      "Add validate-azure-ad-token for your tenant. Test with and without a token.",
+      "Keep 'Subscription required' on. Note that the Consumption tier lacks rate-limit-by-key."
+     ],
+     "note": null,
+     "check": "The sixth call inside a minute returns 429. A call with no token returns 401."
+    },
+    {
+     "objective": "Implement and configure security controls for Azure Functions, including authentication and network access",
+     "kind": "azure",
+     "steps": [
+      "Optional: create a Consumption function app in UK South with the Purpose tag.",
+      "Open Authentication and require Microsoft Entra sign-in. Compare this with function keys.",
+      "Open Networking and add an access restriction for your IP.",
+      "Delete the function app and its storage account."
+     ],
+     "note": "Hand-made. Delete it before terraform destroy.",
+     "check": "An anonymous call returns 401."
+    },
+    {
+     "objective": "Implement and configure security controls for Azure Logic Apps",
+     "kind": "azure",
+     "steps": [
+      "Optional: create a Consumption logic app with an HTTP request trigger.",
+      "Open Workflow settings. Limit trigger access to your IP.",
+      "On an action, open Settings and turn on Secure inputs and Secure outputs.",
+      "Regenerate the access key. Note that a managed identity removes the need for connection secrets. Delete the logic app."
+     ],
+     "note": "Hand-made. Delete it before terraform destroy.",
+     "check": "Run history hides the secured inputs."
+    },
+    {
+     "objective": "Implement and configure security controls for Azure Container Instances and Azure Container Apps",
+     "kind": "study",
+     "steps": [
+      "Read the Container Instances controls: virtual network deployment, managed identity, and no public IP.",
+      "Read the Container Apps controls: internal ingress, managed identity, secrets from Key Vault and built-in authentication.",
+      "Optional: az container create -g rg-sc500-lab -n aci-sc500-lab --image mcr.microsoft.com/azuredocs/aci-helloworld -l uksouth --tags Purpose=\"SC-500 Lab\" --assign-identity",
+      "Delete it: az container delete -g rg-sc500-lab -n aci-sc500-lab --yes"
+     ],
+     "note": null,
+     "check": "You can say how each service pulls from a registry with no password."
+    },
+    {
+     "objective": "Implement and configure security controls for Azure Kubernetes Service (AKS)",
+     "kind": "study",
+     "steps": [
+      "Read the controls: Entra integration, Azure RBAC for Kubernetes, disabled local accounts, authorized IP ranges or a private cluster, network policy, workload identity and the Azure Policy add-on.",
+      "Optional, costs by the hour: az aks create -g rg-sc500-lab -n aks-sc500-lab -l uksouth --node-count 1 --node-vm-size Standard_B2s --enable-aad --enable-azure-rbac --disable-local-accounts --generate-ssh-keys --tags Purpose=\"SC-500 Lab\"",
+      "If you created it, open Security configuration and Networking and match each control to its setting.",
+      "Delete it: az aks delete -g rg-sc500-lab -n aks-sc500-lab --yes"
+     ],
+     "note": "AKS nodes are VMs. Delete the cluster the same day.",
+     "check": "You can match each AKS control to the risk it removes."
+    }
+   ]
+  },
+  {
+   "id": "posture",
+   "n": 10,
+   "area": "Manage and monitor security posture",
+   "section": "Manage security posture by using Defender for Cloud",
+   "terraform": false,
+   "scenario": "Leadership wants one view of risk across Azure and other clouds, mapped to a framework. Use the resources from your other labs as the estate.",
+   "deploys": [
+    "Nothing. This lab uses Defender for Cloud at subscription level and the resources from other labs"
+   ],
+   "cost": "Free to read. Paid plans bill while they are on",
+   "cleanup": [
+    "Turn off every Defender plan you turned on.",
+    "Delete the Defender EASM resource.",
+    "Delete any AWS or GCP connector you made."
+   ],
+   "tasks": [
+    {
+     "objective": "Enable and configure Defender for Cloud workload protection plans",
+     "kind": "azure",
+     "steps": [
+      "Open Defender for Cloud, then Environment settings, then your subscription.",
+      "Read the plan list. For each plan, say what it protects and how it bills.",
+      "Open Settings & monitoring and review the extensions.",
+      "Open Email notifications and set a contact. Open Continuous export and note the Log Analytics option."
+     ],
+     "note": null,
+     "check": "You can say which plans can be turned on for one resource instead of the whole subscription."
+    },
+    {
+     "objective": "Identify security risks by using Defender CSPM",
+     "kind": "azure",
+     "steps": [
+      "Turn the Defender CSPM plan on.",
+      "Open Attack path analysis. Open Cloud Security Explorer and run a template such as internet-exposed VMs with high severity vulnerabilities.",
+      "Open Recommendations and sort by risk level. Read the risk factors on one.",
+      "Turn the plan off."
+     ],
+     "note": "Billed per billable resource. Findings can take a day.",
+     "check": "You can explain foundational CSPM versus Defender CSPM."
+    },
+    {
+     "objective": "Evaluate compliance against security frameworks by using Defender for Cloud",
+     "kind": "azure",
+     "steps": [
+      "Open Regulatory compliance, then Manage compliance standards.",
+      "On your subscription, add one standard such as CIS Azure Foundations or ISO 27001.",
+      "After it loads, compare its controls with the Microsoft cloud security benchmark.",
+      "Remove the standard when done."
+     ],
+     "note": "Extra standards need a paid plan.",
+     "check": "The new standard shows in the dashboard with a passed-controls count."
+    },
+    {
+     "objective": "Configure Microsoft Defender Vulnerability Management settings for Azure VMs",
+     "kind": "azure",
+     "steps": [
+      "Needs the VM lab. Open the Servers plan, then Settings.",
+      "Confirm vulnerability assessment uses Microsoft Defender Vulnerability Management.",
+      "Open the VM in Inventory. Read its software inventory and CVE findings."
+     ],
+     "note": "Needs the Defender for Servers plan on.",
+     "check": "The VM lists installed software and any CVEs."
+    },
+    {
+     "objective": "Connect hybrid cloud and multicloud environments to Defender for Cloud, including Amazon Web Services (AWS) and Google Cloud Platform (GCP)",
+     "kind": "study",
+     "steps": [
+      "Open Environment settings, then Add environment, then Amazon Web Services.",
+      "Walk the wizard: account details, plans, access and the CloudFormation template. Stop there unless you own an AWS account.",
+      "Do the same for Google Cloud Platform and note the script it gives you.",
+      "Note that on-premises servers connect through Azure Arc."
+     ],
+     "note": null,
+     "check": "You can say what gets deployed in AWS to grant access."
+    },
+    {
+     "objective": "Discover unprotected assets and vulnerabilities by using Microsoft Defender External Attack Surface Management (EASM)",
+     "kind": "azure",
+     "steps": [
+      "Create a Microsoft Defender EASM resource in the lab resource group with the Purpose tag.",
+      "If UK South is not offered, the Allowed locations policy from Lab 3 blocks it. That is the policy doing its job. Read the error and treat the rest as a walkthrough.",
+      "Add a discovery group with a domain you own as the seed.",
+      "Review the inventory and the attack surface summary. Delete the resource."
+     ],
+     "note": "Has a 30 day trial, then bills per asset.",
+     "check": "You can explain what a seed is and how discovery grows from it."
+    }
+   ]
+  },
+  {
+   "id": "sentinel",
+   "n": 11,
+   "area": "Manage and monitor security posture",
+   "section": "Implement activity and event collection in Microsoft Sentinel",
+   "terraform": true,
+   "scenario": "The SOC has no central log store. Turn on Microsoft Sentinel, bring in Azure and server logs, and automate the first response step.",
+   "deploys": [
+    "Microsoft Sentinel enabled on the shared workspace log-sc500-lab-<suffix>"
+   ],
+   "cost": "Billed per GB ingested. Lab volumes are tiny. A 31 day trial may apply",
+   "cleanup": [
+    "Delete playbooks (logic apps) you made.",
+    "Delete data collection rules and endpoints you made.",
+    "Remove the Azure Activity policy assignment if you made one."
+   ],
+   "tasks": [
+    {
+     "objective": "Create and connect workspaces in Microsoft Sentinel",
+     "kind": "azure",
+     "steps": [
+      "Terraform enabled Sentinel on the workspace. Open Microsoft Sentinel in the Azure portal and select it.",
+      "In the Defender portal, open Settings, then Microsoft Sentinel. Connect the workspace and note the primary workspace choice.",
+      "Read when you would use more than one workspace."
+     ],
+     "note": null,
+     "check": "The workspace shows in Microsoft Sentinel."
+    },
+    {
+     "objective": "Assign roles in Microsoft Sentinel",
+     "kind": "azure",
+     "steps": [
+      "On rg-sc500-lab, open Access control (IAM). Assign Microsoft Sentinel Reader to a test principal.",
+      "Compare Reader, Responder and Contributor.",
+      "Note the two extra roles: Microsoft Sentinel Playbook Operator to run playbooks, and Logic App Contributor to edit them."
+     ],
+     "note": null,
+     "check": "You can pick the least-privilege role for an analyst who closes incidents."
+    },
+    {
+     "objective": "Implement and use content hub solutions",
+     "kind": "azure",
+     "steps": [
+      "Open Content hub. Install the Azure Activity solution and the Microsoft Entra ID solution.",
+      "Open one installed solution and list what it brought: connectors, analytics rules, workbooks and hunting queries.",
+      "Create one analytics rule from a template."
+     ],
+     "note": null,
+     "check": "Analytics lists at least one active rule."
+    },
+    {
+     "objective": "Configure and use Microsoft data connectors for Azure resources",
+     "kind": "azure",
+     "steps": [
+      "Open Data connectors, then Azure Activity. Launch the Azure Policy assignment wizard and send the subscription activity log to the workspace.",
+      "If the Key Vault lab is deployed, its audit logs already reach this workspace.",
+      "After 15 minutes run: AzureActivity | take 10"
+     ],
+     "note": null,
+     "check": "AzureActivity returns rows."
+    },
+    {
+     "objective": "Implement and configure syslog and Common Event Format (CEF) event collections",
+     "kind": "azure",
+     "steps": [
+      "Needs the VM lab. Install the Syslog via AMA solution from Content hub.",
+      "Open the connector and create a data collection rule. Select vm-sc500-lab and the auth and authpriv facilities.",
+      "After 15 minutes run: Syslog | take 10",
+      "Read how CEF differs: a Linux log forwarder receives CEF over syslog and sends it to the CommonSecurityLog table."
+     ],
+     "note": null,
+     "check": "Syslog returns rows from vm-sc500-lab."
+    },
+    {
+     "objective": "Implement and configure collection of Windows Security events by using data collection rules, including Windows Event Forwarding (WEF)",
+     "kind": "study",
+     "steps": [
+      "Install the Windows Security Events solution. Open the 'Windows Security Events via AMA' connector.",
+      "Start a data collection rule. Compare All Security Events, Common, Minimal and Custom with XPath. No Windows VM is deployed, so stop before you add machines.",
+      "Read the WEF path: source machines forward to a collector server, and the Windows Forwarded Events connector reads from the collector."
+     ],
+     "note": null,
+     "check": "You can pick the event set for a cost limit, and say where the agent sits in a WEF design."
+    },
+    {
+     "objective": "Create custom log tables in the workspace to store ingested data",
+     "kind": "azure",
+     "steps": [
+      "Open the workspace, then Tables, then Create, then New custom log (DCR-based).",
+      "Name it SC500Lab. Create a data collection endpoint and rule when asked.",
+      "Upload a small JSON sample and accept the transformation.",
+      "Open the table and note the plan choices."
+     ],
+     "note": null,
+     "check": "The table SC500Lab_CL shows in the Tables list."
+    },
+    {
+     "objective": "Implement automation rules and playbooks in Microsoft Sentinel",
+     "kind": "azure",
+     "steps": [
+      "Open Automation. Create an automation rule: when an incident is created with High severity, assign it to you and add the tag sc500-lab.",
+      "Create a playbook from a template with the incident trigger.",
+      "Open Settings, then Playbook permissions, and grant Sentinel permission on the lab resource group.",
+      "Add a 'Run playbook' action to your automation rule."
+     ],
+     "note": "The playbook is a hand-made logic app. Delete it before terraform destroy.",
+     "check": "The automation rule lists two actions."
+    },
+    {
+     "objective": "Implement data retention in Microsoft Sentinel data stores",
+     "kind": "azure",
+     "steps": [
+      "Open the workspace, then Usage and estimated costs, then Data retention. Note the default.",
+      "Open Tables. On one table choose Manage table. Set interactive retention to 30 days and total retention to 90 days.",
+      "Read what happens to data past the interactive period, and how you get it back (search jobs and restore)."
+     ],
+     "note": null,
+     "check": "The table shows 30 days interactive and 90 days total."
+    },
+    {
+     "objective": "Query Microsoft Purview Audit in Defender XDR",
+     "kind": "tenant",
+     "steps": [
+      "In the Defender portal, open Audit. Search the last 7 days for one activity, such as a file download.",
+      "Open Advanced hunting and run: CloudAppEvents | where Timestamp > ago(1d) | take 20",
+      "Note which role you need to search the audit log."
+     ],
+     "note": "Needs Microsoft 365 auditing turned on.",
+     "check": "The audit search returns rows."
+    }
+   ]
+  },
+  {
+   "id": "copilot",
+   "n": 12,
+   "area": "Manage and monitor security posture",
+   "section": "Implement Microsoft Security Copilot",
+   "terraform": false,
+   "scenario": "The SOC wants Security Copilot for incident summaries. Set it up with a tight spend limit and tight access.",
+   "deploys": [
+    "Nothing. You create capacity by hand, because it bills by the hour"
+   ],
+   "cost": "A provisioned security compute unit bills every hour it exists. Delete the capacity straight after the lab",
+   "cleanup": [
+    "Delete the Security Copilot capacity. In the Azure portal search for 'Microsoft Security Copilot compute capacities'."
+   ],
+   "tasks": [
+    {
+     "objective": "Configure workspaces for Security Copilot",
+     "kind": "tenant",
+     "steps": [
+      "Read the cost note first. Then open securitycopilot.microsoft.com and select Get started.",
+      "Name a workspace.",
+      "Set up capacity: your subscription, resource group rg-sc500-lab, a name, a UK prompt evaluation location, 1 provisioned unit and 0 overage units.",
+      "Choose the data sharing options and finish."
+     ],
+     "note": "Tenants with Microsoft 365 E5 or E7 get included capacity and skip the paid step.",
+     "check": "The workspace opens and shows 1 unit of capacity."
+    },
+    {
+     "objective": "Manage permissions and roles in Security Copilot",
+     "kind": "tenant",
+     "steps": [
+      "Open Role assignment.",
+      "Compare Copilot owner and Copilot contributor.",
+      "Note which Entra roles get owner access by default, such as Security Administrator.",
+      "Add one security group as contributor. Remove any broad group."
+     ],
+     "note": null,
+     "check": "Only your chosen group has contributor access."
+    },
+    {
+     "objective": "Enable and configure plugins",
+     "kind": "tenant",
+     "steps": [
+      "Open the Sources icon in the prompt bar, then manage plugins.",
+      "Turn on the Microsoft Sentinel plugin and point it at the lab workspace. Turn off plugins you do not need.",
+      "In owner settings, choose who may add and manage custom plugins.",
+      "Run one prompt that uses a plugin. Read the process log to see which plugin ran."
+     ],
+     "note": null,
+     "check": "The process log names the plugin that answered."
+    },
+    {
+     "objective": "Enable and configure Microsoft agents and Security Store agents",
+     "kind": "tenant",
+     "steps": [
+      "Open Agents. Pick one Microsoft agent and read what it needs: identity, permissions, plugins and trigger.",
+      "Set it up with the least access it needs. Run it once and read the activity.",
+      "Open the Security Store. Browse the partner agents and read one listing.",
+      "Delete the capacity now if you created one."
+     ],
+     "note": "Agents use capacity when they run.",
+     "check": "You can say what identity the agent runs as."
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+# Secrets and local setup. Never commit these.
+.env
+.venv/
+
+# Saved exam attempts and Python cache
+sessions/
+__pycache__/
+
+# Terraform local files
+terraform/.terraform/
+terraform/*.tfplan
+*.tfstate
+*.tfstate.*
+deploy/.appname
+bank_test.json
+.DS_Store

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SC-500 Labs</title>
+<style>
+  :root { --bg:#f3f4f6; --card:#fff; --ink:#1b1f24; --muted:#5d6672; --line:#d9dde3; --blue:#0f5fb8; --blue-dark:#0a4a92;
+          --green:#1a7f4b; --red:#b3261e; --amber:#b26a00; --soft:#eef4fb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.55 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background:var(--bg); color:var(--ink); }
+  header.top { background:#16202c; color:#fff; padding:12px 24px; display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:5; }
+  header.top h1 { font-size:17px; margin:0; font-weight:600; flex:1; } header.top a { color:#fff; font-size:14px; }
+  nav.steps { display:flex; gap:4px; background:#fff; border-bottom:1px solid var(--line); padding:0 20px; position:sticky; top:49px; z-index:4; overflow-x:auto; }
+  nav.steps button { border:0; border-bottom:3px solid transparent; border-radius:0; background:none; padding:12px 14px; white-space:nowrap; color:var(--muted); }
+  nav.steps button.on { border-color:var(--blue); color:var(--ink); font-weight:600; }
+  main { max-width:1040px; margin:24px auto; padding:0 16px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:22px 24px; margin-bottom:16px; }
+  h2 { font-size:20px; margin:0 0 10px; } h3 { font-size:16px; margin:22px 0 8px; } p { margin:0 0 12px; }
+  .muted { color:var(--muted); font-size:14px; } a { color:var(--blue); }
+  button { font:inherit; padding:8px 16px; border-radius:4px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  button:hover { background:#f0f2f5; } button.primary { background:var(--blue); border-color:var(--blue); color:#fff; } button.primary:hover { background:var(--blue-dark); }
+  button.small { padding:3px 10px; font-size:13px; }
+  .notice { border-left:4px solid var(--amber); background:#fff8ea; padding:10px 14px; margin:0 0 14px; border-radius:0 4px 4px 0; font-size:15px; }
+  .notice.red { border-color:var(--red); background:#fdecea; } .notice.ok { border-color:var(--green); background:#edf7f1; }
+  pre { background:#16202c; color:#e8edf3; padding:12px 14px; border-radius:5px; overflow-x:auto; font:13.5px/1.5 ui-monospace, Menlo, Consolas, monospace; margin:0; white-space:pre-wrap; word-break:break-word; }
+  .cmd { position:relative; margin:0 0 14px; } .cmd button { position:absolute; top:6px; right:6px; padding:2px 9px; font-size:12px; background:#2c3a4b; color:#fff; border-color:#44546a; }
+  code { font:13.5px ui-monospace, Menlo, Consolas, monospace; background:#eef0f3; padding:1px 5px; border-radius:3px; }
+  .area { font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin:22px 0 8px; }
+  .pick { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; }
+  .lab { border:1px solid var(--line); border-radius:6px; padding:12px 14px; display:flex; gap:10px; align-items:flex-start; background:#fff; }
+  .lab.sel { border-color:var(--blue); background:var(--soft); } .lab input { margin-top:5px; }
+  .lab b { display:block; } .lab .cost { font-size:13px; color:var(--muted); }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .meter { height:8px; background:#e6e9ee; border-radius:4px; overflow:hidden; flex:1; min-width:120px; } .meter i { display:block; height:100%; background:var(--green); transition:width .2s; }
+  .labrow { display:flex; gap:14px; align-items:center; padding:12px 0; border-top:1px solid var(--line); cursor:pointer; }
+  .labrow:first-of-type { border-top:0; } .labrow:hover b { color:var(--blue); }
+  .labrow .num { width:34px; height:34px; border-radius:50%; background:#e6e9ee; display:grid; place-items:center; font-weight:600; flex:none; }
+  .labrow .num.done { background:var(--green); color:#fff; } .labrow .t { flex:1; min-width:0; }
+  .pill { font-size:12px; font-weight:600; padding:2px 8px; border-radius:10px; background:#e6e9ee; color:var(--muted); white-space:nowrap; }
+  .pill.dep { background:#dff1e6; color:var(--green); } .pill.azure { background:var(--soft); color:var(--blue); }
+  .pill.tenant { background:#f3e8fb; color:#6b2fa0; } .pill.study { background:#fff1d6; color:var(--amber); }
+  .task { border:1px solid var(--line); border-radius:6px; margin-bottom:10px; background:#fff; }
+  .task.done { border-color:#9fd0b3; background:#f6fbf8; }
+  .task .head { display:flex; gap:12px; align-items:flex-start; padding:12px 14px; cursor:pointer; }
+  .task .head input { margin-top:5px; width:17px; height:17px; flex:none; } .task .head .ti { flex:1; font-weight:600; }
+  .task .body { padding:0 14px 14px 43px; } .task ol { margin:0 0 10px; padding-left:20px; } .task li { margin-bottom:6px; }
+  .task li.dn { color:var(--muted); text-decoration:line-through; } .task li { cursor:pointer; }
+  .chk { background:#f7f8fa; border-radius:4px; padding:8px 12px; font-size:15px; margin-bottom:8px; }
+  ul.tight { margin:0 0 12px; padding-left:20px; } ul.tight li { margin-bottom:4px; }
+  .todo label { display:flex; gap:10px; align-items:flex-start; padding:6px 0; } .todo input { margin-top:5px; }
+</style>
+</head>
+<body>
+<header class="top"><h1>SC-500 Labs</h1><a href="/">Exams</a></header>
+<nav class="steps" id="nav"></nav>
+<main id="app"></main>
+<script>
+const app = document.getElementById('app'), nav = document.getElementById('nav');
+let D = null, view = 'setup', openLab = null, sel = new Set(), fw = false, saved = null, openTask = null;
+const store = { get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch(e) { return d; } },
+                set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} } };
+let done = store.get('sc500_lab_done', {}), stepsDone = store.get('sc500_lab_steps', {}), todo = store.get('sc500_lab_todo', {});
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') n.className = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, ''); else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const k of kids.flat(3)) if (k != null && k !== false) n.append(k.nodeType ? k : document.createTextNode(k));
+  return n;
+}
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || ('Request failed (' + r.status + ')'));
+  return data;
+}
+function cmd(text) {
+  const b = el('button', { onclick:async () => { try { await navigator.clipboard.writeText(text); b.textContent = 'Copied'; } catch(e) { b.textContent = 'Select and copy'; } setTimeout(() => b.textContent = 'Copy', 1500); } }, 'Copy');
+  return el('div', { class:'cmd' }, el('pre', {}, text), b);
+}
+function show(...kids) { app.replaceChildren(...kids.flat(3).filter(k => k != null && k !== false)); }
+const key = (lab, i) => lab.id + ':' + i;
+const labDone = lab => lab.tasks.filter((t, i) => done[key(lab, i)]).length;
+const KIND = { azure:['Azure', 'Uses Azure resources'], tenant:['Tenant', 'Entra or Microsoft 365 work. May need a licence'], study:['Walkthrough', 'Read and walk the wizard. Deploy nothing'] };
+const deployed = () => saved ? saved.enabled_labs : [];
+const tfLine = () => 'enabled_labs = [' + D.labs.filter(l => sel.has(l.id)).map(l => '"' + l.id + '"').join(', ') + ']';
+
+function go(v, lab) { view = v; openLab = lab || null; openTask = null; render(); window.scrollTo(0, 0); }
+function render() {
+  const tabs = [['setup', '1. Set up'], ['choose', '2. Choose and deploy'], ['labs', '3. Do the labs'], ['destroy', '4. Destroy']];
+  nav.replaceChildren(...tabs.map(([v, t]) => el('button', { class:(view === v || (v === 'labs' && view === 'lab')) ? 'on' : '', onclick:() => go(v) }, t)));
+  ({ setup, choose, labs:list, lab:detail, destroy })[view]();
+}
+
+/* ---------- 1. set up ---------- */
+function setup() {
+  show(
+    el('div', { class:'card' }, el('h2', {}, 'How these labs work'),
+      el('p', {}, 'There are ' + D.labs.length + ' labs. Each lab matches one skill group in the official SC-500 study guide, and each task matches one objective in that group. So when every task is ticked, you have practised every listed skill.'),
+      el('ul', { class:'tight' },
+        el('li', {}, 'Terraform deploys the starting resources into ', el('code', {}, D.resource_group), ' in UK South. It never deletes that resource group.'),
+        el('li', {}, 'Every resource gets the tag ', el('code', {}, D.tag), '.'),
+        el('li', {}, 'Many resources start with weak settings on purpose. Your job is to fix them.'),
+        el('li', {}, 'You pick which labs to deploy, so you only pay for what you use.'))),
+    el('div', { class:'card' }, el('h2', {}, 'Before you start'),
+      el('h3', { style:'margin-top:0' }, '1. Check your tools'), cmd('terraform -version\naz version'),
+      el('p', { class:'muted' }, 'You need Terraform 1.6 or newer and the Azure CLI.'),
+      el('h3', {}, '2. Sign in and pick the subscription'), cmd('az login\naz account set --subscription <your-subscription-id>\naz account show --query "{name:name, id:id, user:user.name}" -o table'),
+      el('h3', {}, '3. Set up remote state'),
+      el('p', {}, 'Terraform keeps its state in an Azure storage account. Make one once, if you have none:'),
+      cmd('az group create -n rg-sc500-tfstate -l uksouth\naz storage account create -g rg-sc500-tfstate -n <unique-name> -l uksouth --sku Standard_LRS --min-tls-version TLS1_2 --allow-blob-public-access false\naz storage container create --account-name <unique-name> -n tfstate --auth-mode login'),
+      el('p', {}, 'Give yourself the ', el('code', {}, 'Storage Blob Data Contributor'), ' role on that account. Then copy ', el('code', {}, 'terraform/backend.hcl.example'), ' to ', el('code', {}, 'backend.hcl'), ' and fill in the account name.'),
+      el('div', { class:'notice' }, 'The lab resource group must exist before you deploy. Create it once: az group create -n ' + D.resource_group + ' -l uksouth'),
+      el('h3', {}, '4. Check your role'),
+      el('p', {}, 'You need Owner on the subscription, or Contributor plus User Access Administrator. The governance lab creates a policy definition and a custom role.'),
+      cmd('az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv) --include-inherited --query "[].roleDefinitionName" -o tsv'),
+      el('h3', {}, '5. Start Terraform'),
+      el('p', {}, 'Your Terraform folder:'), cmd('cd "' + D.terraform_dir + '"\ncp terraform.tfvars.example terraform.tfvars   # then set subscription_id\nterraform init -backend-config=backend.hcl'),
+      el('div', { class:'row' }, el('button', { class:'primary', onclick:() => go('choose') }, 'Next: choose labs'))));
+}
+
+/* ---------- 2. choose and deploy ---------- */
+function choose() {
+  const areas = [...new Set(D.labs.map(l => l.area))];
+  const hosted = !!D.hosted;
+  const dirty = !saved || JSON.stringify([...sel].sort()) !== JSON.stringify([...saved.enabled_labs].sort()) || fw !== saved.deploy_firewall;
+  const tfSel = D.labs.filter(l => sel.has(l.id));
+  show(
+    el('div', { class:'card' }, el('h2', {}, 'Choose the labs to deploy'),
+      el('p', { class:'muted' }, 'Tick the labs you want now. Start with one or two. You can add more later and run apply again. Costs are a rough guide, so check the Azure pricing calculator.'),
+      areas.map(a => [el('div', { class:'area' }, a), el('div', { class:'pick' }, D.labs.filter(l => l.area === a).map(l =>
+        el('label', { class:'lab' + (sel.has(l.id) ? ' sel' : '') },
+          el('input', { type:'checkbox', checked:sel.has(l.id), onchange:() => { sel.has(l.id) ? sel.delete(l.id) : sel.add(l.id); if (!sel.has('network')) fw = false; render(); } }),
+          el('span', {}, el('b', {}, 'Lab ' + l.n + ': ' + l.section), el('span', { class:'cost' }, (l.terraform ? '' : 'Portal only. ') + 'Cost: ' + l.cost)))))]),
+      sel.has('network') ? el('label', { class:'lab' + (fw ? ' sel' : ''), style:'margin-top:12px' },
+        el('input', { type:'checkbox', checked:fw, onchange:() => { fw = !fw; render(); } }),
+        el('span', {}, el('b', {}, 'Deploy Azure Firewall (network lab)'), el('span', { class:'cost' }, 'Bills by the hour. Tick it only for the firewall task, then untick it.'))) : null),
+    el('div', { class:'card' }, el('h2', {}, 'Deploy'),
+      el('h3', { style:'margin-top:0' }, '1. Save your choice'),
+      hosted ? el('p', {}, 'This copy runs in Azure, so it cannot edit files on your Mac. Paste these two lines into ', el('code', {}, 'terraform/terraform.tfvars'), ' yourself, in place of the old ones.')
+             : el('p', {}, 'This writes one line into ', el('code', {}, 'terraform/terraform.tfvars'), '. It deploys nothing.'),
+      cmd(tfLine() + '\ndeploy_firewall = ' + (fw && sel.has('network'))),
+      el('div', { class:'row', style:'margin-bottom:14px' },
+        el('button', { class:dirty ? 'primary' : '', onclick:async () => { try { saved = await saveSel([...sel], fw); render(); } catch (e) { alertBox(e.message); } } }, hosted ? 'I pasted the lines' : 'Save to terraform.tfvars'),
+        el('span', { class:'muted', id:'saveMsg' }, dirty ? 'Not saved yet.' : (hosted ? 'Noted. The page now shows these labs as deployed.' : 'Saved. The file matches your choice.'))),
+      el('h3', {}, '2. Review the plan'), cmd('cd "' + D.terraform_dir + '"\nterraform plan -out lab.tfplan'),
+      el('p', { class:'muted' }, 'Read the plan. Every resource should be in uksouth with the Purpose tag. Nothing should be destroyed unless you unticked a lab.'),
+      el('h3', {}, '3. Apply'), cmd('terraform apply lab.tfplan'),
+      el('p', { class:'muted' }, 'Most labs take 2 to 5 minutes. API Management can take longer.'),
+      el('h3', {}, '4. See what you got'), cmd('terraform output lab_resources'),
+      tfSel.length ? [el('h3', {}, 'This choice deploys'), el('ul', { class:'tight' },
+        el('li', {}, 'Shared: Log Analytics workspace and virtual network vnet-sc500-lab (free while idle)'),
+        tfSel.flatMap(l => l.deploys.map(d => el('li', {}, 'Lab ' + l.n + ': ' + d))))] : null,
+      el('div', { class:'notice' }, 'To remove one lab later: untick it, save, then run plan and apply again. Terraform removes only that lab.'),
+      el('div', { class:'row' }, el('button', { class:'primary', onclick:() => go('labs') }, 'Next: do the labs'))));
+}
+async function saveSel(labs, firewall) {
+  if (!D.hosted) return api('/api/labs/selection', { enabled_labs:labs, deploy_firewall:firewall });
+  const s = { enabled_labs:D.labs.map(l => l.id).filter(id => labs.includes(id)), deploy_firewall:firewall && labs.includes('network') };
+  store.set('sc500_lab_sel', s); return s;   // hosted: remember the choice in this browser only
+}
+function alertBox(msg) { const m = document.getElementById('saveMsg'); if (m) { m.textContent = msg; m.style.color = 'var(--red)'; } }
+
+/* ---------- 3. lab list ---------- */
+function list() {
+  const total = D.labs.reduce((n, l) => n + l.tasks.length, 0), got = D.labs.reduce((n, l) => n + labDone(l), 0);
+  const areas = [...new Set(D.labs.map(l => l.area))];
+  show(
+    el('div', { class:'card' }, el('h2', {}, 'Your progress'),
+      el('div', { class:'row' }, el('div', { class:'meter' }, el('i', { style:'width:' + (100 * got / total) + '%' })), el('b', {}, got + ' of ' + total + ' objectives practised')),
+      el('p', { class:'muted', style:'margin:10px 0 0' }, 'Progress is saved in this browser.')),
+    areas.map(a => { const ls = D.labs.filter(l => l.area === a);
+      const n = ls.reduce((x, l) => x + l.tasks.length, 0), g = ls.reduce((x, l) => x + labDone(l), 0);
+      return el('div', { class:'card' }, el('div', { class:'row' }, el('h2', { style:'margin:0;flex:1' }, a), el('span', { class:'muted' }, g + ' / ' + n)),
+        ls.map(l => { const d = labDone(l), dep = deployed().includes(l.id);
+          return el('div', { class:'labrow', onclick:() => go('lab', l.id) },
+            el('div', { class:'num' + (d === l.tasks.length ? ' done' : '') }, String(l.n)),
+            el('div', { class:'t' }, el('b', {}, l.section), el('div', { class:'muted' }, d + ' of ' + l.tasks.length + ' tasks done')),
+            l.terraform ? el('span', { class:'pill' + (dep ? ' dep' : '') }, dep ? 'In terraform.tfvars' : 'Not deployed') : el('span', { class:'pill study' }, 'Portal only')); })); }));
+}
+
+/* ---------- lab detail ---------- */
+function detail() {
+  const l = D.labs.find(x => x.id === openLab), d = labDone(l), dep = deployed().includes(l.id);
+  const learn = t => 'https://learn.microsoft.com/en-us/search/?terms=' + encodeURIComponent(t);
+  show(
+    el('p', {}, el('a', { href:'#', onclick:e => { e.preventDefault(); go('labs'); } }, '← All labs')),
+    el('div', { class:'card' },
+      el('p', { class:'muted', style:'margin-bottom:4px' }, l.area),
+      el('h2', {}, 'Lab ' + l.n + ': ' + l.section),
+      el('p', {}, el('b', {}, 'Scenario. '), l.scenario),
+      l.terraform && !dep ? el('div', { class:'notice' }, 'This lab is not in terraform.tfvars yet. ', el('a', { href:'#', onclick:e => { e.preventDefault(); sel.add(l.id); go('choose'); } }, 'Add it and deploy'), ' before you start the Azure tasks.') : null,
+      el('h3', {}, l.terraform ? 'Terraform deploys' : 'Terraform'), el('ul', { class:'tight' }, l.deploys.map(x => el('li', {}, x))),
+      el('p', { class:'muted' }, 'Cost: ' + l.cost + '.'),
+      el('div', { class:'row' }, el('div', { class:'meter' }, el('i', { style:'width:' + (100 * d / l.tasks.length) + '%' })), el('b', {}, d + ' of ' + l.tasks.length + ' tasks'),
+        el('button', { class:'primary', onclick:() => { location.href = '/?section=' + encodeURIComponent(l.section); } }, 'Practice questions on this lab'))),
+    el('div', { class:'row', style:'margin:0 0 12px' }, Object.entries(KIND).map(([k, [name, tip]]) => el('span', { class:'muted' }, el('span', { class:'pill ' + k }, name), ' ' + tip + '.  '))),
+    l.tasks.map((t, i) => { const k = key(l, i), isDone = !!done[k], open = openTask === i, sd = stepsDone[k] || [];
+      return el('div', { class:'task' + (isDone ? ' done' : '') },
+        el('div', { class:'head', onclick:() => { openTask = open ? null : i; render(); } },
+          el('input', { type:'checkbox', checked:isDone, title:'Mark this objective as practised', onclick:e => { e.stopPropagation(); done[k] = !isDone; store.set('sc500_lab_done', done); render(); } }),
+          el('div', { class:'ti' }, (i + 1) + '. ' + t.objective), el('span', { class:'pill ' + t.kind }, KIND[t.kind][0])),
+        open ? el('div', { class:'body' },
+          t.note ? el('div', { class:'notice' }, t.note) : null,
+          el('ol', {}, t.steps.map((s, j) => el('li', { class:sd.includes(j) ? 'dn' : '', title:'Click to tick off this step', onclick:() => { stepsDone[k] = sd.includes(j) ? sd.filter(x => x !== j) : [...sd, j]; store.set('sc500_lab_steps', stepsDone); render(); } }, s))),
+          t.check ? el('div', { class:'chk' }, el('b', {}, 'Check yourself. '), t.check) : null,
+          el('div', { class:'row' },
+            el('button', { class:isDone ? '' : 'primary', onclick:() => { done[k] = !isDone; store.set('sc500_lab_done', done); if (!isDone) openTask = i + 1 < l.tasks.length ? i + 1 : null; render(); } }, isDone ? 'Mark as not done' : 'Done. Next task'),
+            el('a', { href:learn(t.objective), target:'_blank', rel:'noopener' }, 'Microsoft Learn docs for this objective'))) : null); }),
+    el('div', { class:'card' }, el('h3', { style:'margin-top:0' }, 'Before you destroy'),
+      el('p', { class:'muted' }, 'Terraform only removes what it created. Undo these by hand first:'),
+      el('ul', { class:'tight' }, l.cleanup.map(x => el('li', {}, x))),
+      el('div', { class:'row' },
+        l.n > 1 ? el('button', { onclick:() => go('lab', D.labs[l.n - 2].id) }, '← Lab ' + (l.n - 1)) : null,
+        l.n < D.labs.length ? el('button', { onclick:() => go('lab', D.labs[l.n].id) }, 'Lab ' + (l.n + 1) + ' →') : null,
+        el('button', { onclick:() => go('destroy') }, 'Go to destroy'))));
+}
+
+/* ---------- 4. destroy ---------- */
+function destroy() {
+  const mine = D.labs.filter(l => deployed().includes(l.id) || labDone(l) > 0);
+  const items = mine.flatMap(l => l.cleanup.map((c, i) => ({ k:l.id + ':c' + i, text:'Lab ' + l.n + ': ' + c })));
+  const left = items.filter(x => !todo[x.k]).length;
+  show(
+    el('div', { class:'card' }, el('h2', {}, 'Destroy the lab'),
+      el('p', {}, 'Do these steps in order when you finish practising. Terraform removes everything it created. The resource group ', el('code', {}, D.resource_group), ' and the state storage account stay.'),
+      el('h3', {}, '1. Undo what you made by hand'),
+      items.length ? el('div', { class:'todo' }, items.map(x => el('label', {}, el('input', { type:'checkbox', checked:!!todo[x.k], onchange:() => { todo[x.k] = !todo[x.k]; store.set('sc500_lab_todo', todo); render(); } }), el('span', {}, x.text))))
+                   : el('p', { class:'muted' }, 'Nothing listed yet. Items show here for labs you deployed or worked on.'),
+      items.length ? el('div', { class:'notice' + (left ? '' : ' ok') }, left ? left + ' item' + (left === 1 ? '' : 's') + ' left. Leftovers such as locks or Azure Bastion make destroy fail.' : 'All clear. You can destroy.') : null,
+      el('h3', {}, '2. Preview, then destroy'), cmd('cd "' + D.terraform_dir + '"\nterraform plan -destroy\nterraform destroy'),
+      el('p', { class:'muted' }, 'Terraform lists what it will remove and waits for you to type yes. It takes 5 to 15 minutes.'),
+      el('h3', {}, '3. Check nothing with the lab tag is left'), cmd('az resource list -g ' + D.resource_group + ' --query "[?tags.Purpose==\'SC-500 Lab\'].{name:name, type:type}" -o table'),
+      el('p', { class:'muted' }, 'An empty result means the lab is gone. Delete anything it lists by hand. Things you made by hand with no tag will not show, so also look at the resource group in the portal.'),
+      el('h3', {}, '4. Turn off paid plans'), cmd('az security pricing list --query "value[?pricingTier==\'Standard\'].name" -o tsv'),
+      el('p', { class:'muted' }, 'This lists Defender for Cloud plans that are still on. Turn off any you enabled for a lab, in Defender for Cloud under Environment settings. Also delete Security Copilot capacity if you made one.'),
+      el('h3', {}, '5. Reset your choice'),
+      el('div', { class:'row' }, el('button', { onclick:async () => { sel = new Set(); fw = false; saved = await saveSel([], false); todo = {}; store.set('sc500_lab_todo', todo); render(); } }, 'Clear enabled_labs in terraform.tfvars'),
+        el('span', { class:'muted' }, deployed().length ? 'Now: ' + deployed().join(', ') : 'terraform.tfvars has no labs enabled.')),
+      el('div', { class:'notice', style:'margin-top:16px' }, 'Short break only? Skip destroy. Deallocate the VM, untick the firewall and leave the rest. Most lab resources cost pennies while idle.')));
+}
+
+(async function () {
+  try { D = await api('/api/labs'); saved = D.hosted ? store.get('sc500_lab_sel', { enabled_labs:[], deploy_firewall:false }) : D.selection; sel = new Set(saved.enabled_labs); fw = saved.deploy_firewall; render(); }
+  catch (e) { app.replaceChildren(el('div', { class:'notice red' }, 'Could not load the labs: ' + e.message)); }
+})();
+</script>
+</body>
+</html>

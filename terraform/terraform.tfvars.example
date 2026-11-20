@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (git-ignored), then set your subscription ID.
+subscription_id = "<your-subscription-id>"
+
+# Pick the labs to deploy. The Labs page in the web app builds this line for you.
+# Names: identity, keyvault, governance, storage, database, network, ai, vm, apps, sentinel
+# (posture and copilot are portal-only labs and deploy nothing.)
+enabled_labs = []
+
+# Network lab: set true only while you work on the Azure Firewall tasks.
+deploy_firewall = false

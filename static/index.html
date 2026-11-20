@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SC-500 Practice Exam Simulator</title>
+<style>
+  :root { --bg:#f3f4f6; --card:#fff; --ink:#1b1f24; --muted:#5d6672; --line:#d9dde3; --blue:#0f5fb8;
+          --blue-dark:#0a4a92; --green:#1a7f4b; --red:#b3261e; --amber:#b26a00; --soft:#eef4fb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.55 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background:var(--bg); color:var(--ink); }
+  header.top { background:#16202c; color:#fff; padding:12px 24px; display:flex; align-items:center; gap:16px; }
+  header.top h1 { font-size:17px; margin:0; font-weight:600; flex:1; }
+  header.top .tag { font-size:12px; padding:3px 8px; border-radius:3px; background:#2c3a4b; }
+  header.top .tag.warn { background:var(--amber); }
+  main { max-width:1120px; margin:24px auto; padding:0 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:24px; margin-bottom:16px; }
+  h2 { font-size:20px; margin:0 0 12px; } h3 { font-size:16px; margin:20px 0 8px; }
+  p { margin:0 0 12px; } .muted { color:var(--muted); font-size:14px; }
+  button { font:inherit; padding:8px 16px; border-radius:4px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  button:hover { background:#f0f2f5; } button:disabled { opacity:.5; cursor:default; }
+  button.primary { background:var(--blue); border-color:var(--blue); color:#fff; } button.primary:hover { background:var(--blue-dark); }
+  button.danger { border-color:var(--red); color:var(--red); }
+  .modes { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+  .mode { border:1px solid var(--line); border-radius:6px; padding:16px; display:flex; flex-direction:column; gap:8px; }
+  .mode b { font-size:16px; } .mode button { margin-top:auto; }
+  .notice { border-left:4px solid var(--amber); background:#fff8ea; padding:12px 16px; margin-bottom:16px; border-radius:0 4px 4px 0; }
+  .notice.err { border-color:var(--red); background:#fdecea; }
+  .layout { display:grid; grid-template-columns:1fr 250px; gap:16px; align-items:start; }
+  @media (max-width:820px) { .layout { grid-template-columns:1fr; } }
+  .stem { white-space:pre-wrap; margin-bottom:16px; }
+  .opt { display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); border-radius:4px; padding:10px 12px; margin-bottom:8px; cursor:pointer; }
+  .opt:hover { background:#f7f9fb; } .opt.sel { border-color:var(--blue); background:var(--soft); }
+  .opt.c { border-color:var(--green); background:#edf7f1; } .opt.w { border-color:var(--red); background:#fdecea; } .opt.done { cursor:default; }
+  .fb { border:1px solid var(--line); border-left:4px solid var(--green); border-radius:0 4px 4px 0; padding:14px 16px; margin-top:16px; } .fb.no { border-left-color:var(--red); }
+  .fb .hd { display:flex; gap:10px; align-items:center; font-weight:600; margin-bottom:8px; } .fb p { margin-bottom:8px; }
+  .grid button.ok { background:#dff1e6; border-color:#9fd0b3; } .grid button.bad { background:#fbdcd9; border-color:#e5a39d; }
+  .opt input { margin-top:5px; } .opt .lab { font-weight:600; min-width:20px; }
+  .ord { display:flex; gap:10px; align-items:center; border:1px solid var(--line); border-radius:4px; padding:8px 12px; margin-bottom:8px; }
+  .ord .pos { font-weight:600; color:var(--muted); min-width:20px; } .ord .txt { flex:1; } .ord button { padding:2px 9px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
+  .bar .sp { flex:1; }
+  .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .grid button { padding:6px 0; font-size:13px; position:relative; }
+  .grid button.ans { background:var(--soft); border-color:#a9c6e6; }
+  .grid button.cur { outline:2px solid var(--blue); }
+  .grid button.flag::after { content:""; position:absolute; top:2px; right:2px; width:7px; height:7px; border-radius:50%; background:var(--amber); }
+  .legend { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.8; }
+  .stat { display:flex; justify-content:space-between; font-size:14px; padding:3px 0; }
+  .saved { font-size:13px; color:var(--muted); margin-left:8px; align-self:center; }
+  details.case { margin-bottom:16px; } details.case summary { cursor:pointer; font-weight:600; }
+  details.case .body { white-space:pre-wrap; font-size:15px; margin-top:8px; }
+  .score { font-size:44px; font-weight:700; line-height:1.1; } .pass { color:var(--green); } .fail { color:var(--red); }
+  table { border-collapse:collapse; width:100%; font-size:15px; } th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { font-size:13px; color:var(--muted); font-weight:600; }
+  .meter { height:8px; background:#e6e9ee; border-radius:4px; overflow:hidden; min-width:90px; } .meter i { display:block; height:100%; background:var(--blue); }
+  .rev { border-top:1px solid var(--line); padding:16px 0; } .rev:first-of-type { border-top:0; }
+  .rev .hd { display:flex; gap:10px; align-items:center; margin-bottom:6px; font-weight:600; }
+  .pill { font-size:12px; font-weight:600; padding:2px 8px; border-radius:10px; color:#fff; } .pill.ok { background:var(--green); } .pill.no { background:var(--red); }
+  .rev .o { padding:3px 0 3px 8px; border-left:3px solid transparent; font-size:15px; } .rev .o.c { border-color:var(--green); background:#edf7f1; } .rev .o.w { border-color:var(--red); background:#fdecea; }
+  .exp { background:#f7f8fa; border-radius:4px; padding:10px 12px; margin-top:8px; font-size:15px; }
+  .spin { width:34px; height:34px; border:4px solid #d9dde3; border-top-color:var(--blue); border-radius:50%; animation:r 1s linear infinite; margin:8px auto 16px; }
+  @keyframes r { to { transform:rotate(360deg); } }
+  a { color:var(--blue); }
+  dialog { border:1px solid var(--line); border-radius:6px; padding:24px; max-width:440px; } dialog::backdrop { background:rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>SC-500 Practice Exam Simulator</h1>
+  <a href="/labs" style="color:#fff;font-size:14px">Labs</a>
+  <span class="tag" id="tagModel" title="Set ANTHROPIC_MODEL in .env to change it"></span>
+  <span class="tag" id="tagMode" hidden></span>
+  <span class="tag warn" id="tagWarn" hidden></span>
+</header>
+<main id="app"></main>
+<dialog id="dlg"><div id="dlgBody"></div><div class="bar" id="dlgBar"></div></dialog>
+
+<script>
+const app = document.getElementById('app');
+const MODE_NAMES = { full:'Full Exam Mode', quick:'Quick Exam Mode', case:'Case Study Mode', practice:'Practice Mode' };
+let cfg = {}, exam = null, cur = 0, draft = null, results = null, section = null, source = 'new';
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') n.className = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, ''); else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : document.createTextNode(k));
+  return n;
+}
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || ('Request failed (' + r.status + ')'));
+  return data;
+}
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } },
+                set(k,v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e) {} } };
+function tags() {
+  const m = document.getElementById('tagMode'), w = document.getElementById('tagWarn');
+  document.getElementById('tagModel').textContent = 'Model: ' + (exam && exam.model ? exam.model : (cfg.mock ? 'mock (no tokens)' : cfg.model || ''));
+  m.hidden = !exam; if (exam) m.textContent = MODE_NAMES[exam.mode] + (exam.section ? ': ' + exam.section : '');
+  const warn = exam && (exam.mock ? 'MOCK QUESTIONS' : (!exam.verified ? 'UNVERIFIED PRACTICE SET' : ''));
+  w.hidden = !warn; w.textContent = warn || '';
+}
+function ask(bodyNodes, buttons) {
+  const d = document.getElementById('dlg'), b = document.getElementById('dlgBody'), bar = document.getElementById('dlgBar');
+  b.replaceChildren(...bodyNodes); bar.replaceChildren();
+  for (const [label, cls, fn] of buttons) bar.append(el('button', { class:cls || '', onclick:() => { d.close(); fn && fn(); } }, label));
+  d.showModal();
+}
+
+/* ---------- home ---------- */
+function home(error) {
+  exam = null; results = null; section = null; source = 'new'; store.set('sc500_exam', null);
+  api('/api/config').then(c => { cfg = c; }).catch(() => {}).finally(() => drawHome(error));
+}
+function drawHome(error) {
+  tags();
+  const bank = cfg.bank || { questions:0, cases:0 };
+  const mode = (key, title, text) => { const have = key === 'case' ? bank.cases : bank.questions, need = key === 'case' ? 1 : cfg.modes[key];
+    return el('div', { class:'mode' }, el('b', {}, title), el('span', { class:'muted' }, text),
+      el('button', { class:'primary', style:'margin-top:auto', onclick:() => { source = 'new'; start(key, false); } }, 'Write new questions (uses tokens)'),
+      el('button', { style:'margin-top:0', disabled:have < need, title:have < need ? 'Needs ' + need + ' saved. You have ' + have + '.' : '', onclick:() => { source = 'bank'; start(key, false); } },
+        'Use saved questions (free)')); };
+  const put = (...k) => app.replaceChildren(...k.filter(x => x != null && x !== false));
+  put(
+    error ? el('div', { class:'notice err' }, error) : null,
+    cfg.mock ? el('div', { class:'notice' }, 'Mock mode is on. Questions are placeholders and no AI is used. Remove SC500_MOCK from .env for real questions.') : null,
+    (!cfg.mock && !cfg.has_key) ? el('div', { class:'notice err' }, 'No ANTHROPIC_API_KEY found. Add it to the .env file and restart the app.') : null,
+    el('div', { class:'card' },
+      el('h2', {}, 'Choose a mode'),
+      el('p', { class:'muted' }, 'Exam SC-500: Implementing End-to-End Security Controls for Cloud and AI Workloads. The app checks the official Microsoft Learn study guide before it builds each exam.'),
+      el('p', { class:'muted' }, 'Question bank: ' + bank.questions + ' saved question' + (bank.questions === 1 ? '' : 's') + ' and ' + bank.cases + ' saved case stud' + (bank.cases === 1 ? 'y' : 'ies') + '. Every new question the model writes is saved here for free reuse.'),
+      el('div', { class:'modes' },
+        mode('full', 'Full Exam Mode', cfg.modes.full + ' questions. Answers stay hidden until you submit.'),
+        mode('quick', 'Quick Exam Mode', cfg.modes.quick + ' questions across all objective areas. Answers stay hidden until you submit.'),
+        mode('case', 'Case Study Mode', 'One case study with ' + cfg.modes.case + ' linked questions.'),
+        mode('practice', 'Practice Mode', cfg.modes.practice + ' questions. After each answer you see if you were right, the correct answer, why, and a Microsoft Learn link.'))),
+    el('div', { class:'card' },
+      el('h3', { style:'margin-top:0' }, 'Exam rules'),
+      el('ul', { class:'muted' },
+        el('li', {}, 'You see one question at a time. You can skip, flag, go back and change answers.'),
+        el('li', {}, 'In the three exam modes, no hints, answers or explanations appear until you submit.'),
+        el('li', {}, 'Practice Mode is for study. It shows the answer after each question, so its score is not a readiness check.'),
+        el('li', {}, 'Multiple-answer questions need every correct selection. There is no partial credit.'),
+        el('li', {}, 'The practice pass mark is ' + cfg.pass_mark + ' out of 1000. This is not Microsoft’s official scoring.'))));
+}
+async function start(mode, allowUnverified) {
+  const wait = { full:'This takes about a minute.', quick:'This takes about 20 seconds.', case:'This takes about 30 seconds.', practice:'This takes about 20 seconds.' }[mode];
+  app.replaceChildren(el('div', { class:'card', style:'text-align:center' }, el('div', { class:'spin' }),
+    el('h2', {}, 'Building your exam'), el('p', { class:'muted' }, source === 'bank' ? 'Checking the official SC-500 study guide and picking saved questions.' : 'Checking the official SC-500 study guide and writing new questions with ' + (cfg.mock ? 'mock mode' : cfg.model) + '. ' + wait)));
+  try {
+    const data = await api('/api/exams', { mode, allow_unverified:allowUnverified, section, source });
+    if (data.needs_confirmation) {
+      const keep = section, keepSrc = source; home();
+      ask([el('h2', {}, 'Scope cannot be verified'), el('p', {}, data.message), el('p', { class:'muted' }, 'Reason: ' + (data.error || 'unknown'))],
+          [['Cancel'], ['Continue unverified', 'primary', () => { section = keep; source = keepSrc; start(mode, true); }]]);
+      return;
+    }
+    exam = data; section = exam.section; source = exam.source; cur = 0; store.set('sc500_exam', exam.id); openQuestion(0);
+  } catch (e) { home(e.message); }
+}
+
+/* ---------- exam ---------- */
+function openQuestion(i) {
+  cur = Math.max(0, Math.min(exam.questions.length - 1, i));
+  const q = exam.questions[cur];
+  draft = q.answer ? [...q.answer] : (q.type === 'ordering' ? q.options.map(o => o.label) : []);
+  renderExam();
+}
+function sameAsSaved(q) { return q.answer && JSON.stringify(q.type === 'ordering' ? draft : [...draft].sort()) === JSON.stringify(q.answer); }
+function draftValid(q) {
+  if (q.type === 'ordering') return true;
+  if (q.type === 'multiple') return draft.length === q.required;
+  return draft.length === 1;
+}
+async function saveDraft() {
+  const q = exam.questions[cur];
+  const ans = q.type === 'ordering' ? [...draft] : [...draft].sort();
+  const r = await api('/api/exams/' + exam.id + '/answer', { qid:q.id, answer:ans });
+  q.answer = ans; exam.status = r.status;
+}
+function renderExam(msg) {
+  tags();
+  const q = exam.questions[cur], n = exam.questions.length;
+  const practice = exam.mode === 'practice', fb = q.feedback;
+  const text = Object.fromEntries(q.options.map(o => [o.label, o.text]));
+  let body;
+  if (q.type === 'ordering') {
+    body = el('div', {}, draft.map((lab, i) => el('div', { class:'ord' },
+      el('span', { class:'pos' }, String(i + 1)), el('span', { class:'txt' }, text[lab]),
+      fb ? null : el('button', { title:'Move up', disabled:i === 0, onclick:() => { [draft[i-1], draft[i]] = [draft[i], draft[i-1]]; renderExam(); } }, '↑'),
+      fb ? null : el('button', { title:'Move down', disabled:i === draft.length - 1, onclick:() => { [draft[i+1], draft[i]] = [draft[i], draft[i+1]]; renderExam(); } }, '↓'))));
+  } else {
+    const multi = q.type === 'multiple';
+    body = el('div', {}, q.options.map(o => {
+      const on = draft.includes(o.label);
+      const mark = fb ? (fb.correct.includes(o.label) ? ' c done' : (on ? ' w done' : ' done')) : (on ? ' sel' : '');
+      return el('label', { class:'opt' + mark },
+        el('input', { type:multi ? 'checkbox' : 'radio', name:'opt', checked:on, disabled:!!fb, onchange:() => {
+          if (multi) draft = on ? draft.filter(x => x !== o.label) : [...draft, o.label]; else draft = [o.label];
+          renderExam(); } }),
+        el('span', { class:'lab' }, o.label + '.'), el('span', {}, o.text));
+    }));
+  }
+  const kind = { single:'Select one answer.', solution:'Select Yes or No.', multiple:'Select exactly ' + q.required + ' answers.',
+                 ordering:'Arrange the actions in the correct order. Use the arrows, then save.' }[q.type];
+  const savedNote = practice ? (fb ? 'Checked.' : 'Not checked yet.') : q.answer ? (sameAsSaved(q) ? 'Answer saved.' : 'You have unsaved changes.') : 'Not answered.';
+  const go = async (next) => {
+    try { if (draftValid(q) && !sameAsSaved(q)) await saveDraft(); else if (!draftValid(q)) return renderExam(kind);
+          openQuestion(next); } catch (e) { renderExam(e.message); }
+  };
+  const check = async () => {
+    if (!draftValid(q)) return renderExam(kind);
+    try { const ans = q.type === 'ordering' ? [...draft] : [...draft].sort();
+          const r = await api('/api/exams/' + exam.id + '/answer?check=true', { qid:q.id, answer:ans });
+          q.answer = ans; q.feedback = r.feedback; exam.status = r.status; renderExam(); } catch (e) { renderExam(e.message); }
+  };
+  const fbBox = fb ? el('div', { class:'fb' + (fb.is_correct ? '' : ' no') },
+    el('div', { class:'hd' }, el('span', { class:'pill ' + (fb.is_correct ? 'ok' : 'no') }, fb.is_correct ? 'Correct' : 'Incorrect'),
+      q.type === 'ordering' ? 'Correct order:' : 'Correct answer: ' + fmtAns(q, fb.correct)),
+    q.type === 'ordering' ? el('ol', { style:'margin:0 0 8px' }, fb.correct.map(l => el('li', {}, text[l]))) : null,
+    el('p', {}, fb.explanation),
+    el('p', {}, el('b', {}, 'Microsoft Learn: '), el('a', { href:fb.doc.url, target:'_blank', rel:'noopener' }, fb.doc.label)),
+    el('p', { class:'muted', style:'margin:0' }, 'Objective: ' + fb.area + ' › ' + fb.section + ' › ' + fb.objective + '. ',
+      el('a', { href:exam.guide_url, target:'_blank', rel:'noopener' }, 'Study guide'))) : null;
+  const mainBtn = !practice ? el('button', { class:'primary', onclick:() => go(cur === n - 1 ? cur : cur + 1) }, cur === n - 1 ? 'Save answer' : 'Save and next')
+    : !fb ? el('button', { class:'primary', onclick:check }, 'Check answer')
+    : cur === n - 1 ? el('button', { class:'primary', onclick:confirmSubmit }, 'Finish practice')
+    : el('button', { class:'primary', onclick:() => openQuestion(cur + 1) }, 'Next question');
+  const c = exam.case;
+  const main = el('div', { class:'card' },
+    c ? el('details', { class:'case', open:cur === 0 }, el('summary', {}, 'Case study: ' + c.title),
+      el('div', { class:'body' }, 'Overview\n' + c.overview + '\n\nExisting environment\n' + c.existing_environment +
+        '\n\nProblem statements\n' + c.problem_statements + '\n\nRequirements\n' + c.requirements)) : null,
+    el('p', { class:'muted' }, 'Question ' + (cur + 1) + ' of ' + n + (q.flagged ? '  ·  Flagged' : '')),
+    el('div', { class:'stem' }, q.stem),
+    el('p', { class:'muted' }, kind), body,
+    msg ? el('div', { class:'notice err', style:'margin-top:12px' }, msg) : null,
+    fb ? fbBox : el('p', { style:'margin-top:16px;font-weight:600' }, 'Enter your answer.'),
+    el('div', { class:'bar' },
+      el('button', { disabled:cur === 0, onclick:() => openQuestion(cur - 1) }, 'Previous'),
+      el('button', { onclick:() => openQuestion(cur + 1), disabled:cur === n - 1 }, 'Skip'),
+      el('button', { onclick:async () => { q.flagged = !q.flagged; const r = await api('/api/exams/' + exam.id + '/flag', { qid:q.id, flagged:q.flagged }); exam.status = r.status; renderExam(); } }, q.flagged ? 'Remove flag' : 'Flag'),
+      practice ? null : el('button', { disabled:!q.answer, onclick:async () => { const r = await api('/api/exams/' + exam.id + '/answer', { qid:q.id, answer:null }); q.answer = null; exam.status = r.status; openQuestion(cur); } }, 'Clear answer'),
+      el('span', { class:'saved' }, savedNote), el('span', { class:'sp' }),
+      mainBtn));
+  const s = exam.status;
+  const side = el('div', {},
+    el('div', { class:'card', style:'padding:16px' },
+      el('div', { class:'grid' }, exam.questions.map((x, i) => el('button', {
+        class:(x.feedback ? (x.feedback.is_correct ? 'ok ' : 'bad ') : (x.answer ? 'ans ' : '')) + (x.flagged ? 'flag ' : '') + (i === cur ? 'cur' : ''), onclick:() => openQuestion(i) }, String(i + 1)))),
+      el('div', { class:'legend' }, practice ? 'Green: correct. Red: incorrect. Amber dot: flagged.' : 'Blue: answered. Amber dot: flagged.')),
+    el('div', { class:'card', style:'padding:16px' },
+      el('b', {}, 'Exam status'),
+      [['Answered', s.answered], ['Unanswered', s.unanswered], ['Flagged', s.flagged], ['Changed', s.changed], ['Remaining', s.remaining]]
+        .map(([k, v]) => el('div', { class:'stat' }, el('span', {}, k), el('b', {}, String(v)))),
+      el('button', { class:'primary', style:'width:100%;margin-top:12px', onclick:confirmSubmit }, practice ? 'Finish practice' : 'Submit exam'),
+      el('button', { class:'danger', style:'width:100%;margin-top:8px', onclick:() => ask([el('h2', {}, 'Quit this exam?'), el('p', {}, 'You will lose this attempt. No answers will be shown.')], [['Cancel'], ['Quit', 'danger', () => home()]]) }, 'Quit')));
+  app.replaceChildren(el('div', { class:'layout' }, main, side));
+}
+function confirmSubmit() {
+  const s = exam.status;
+  ask([el('h2', {}, 'Submit the exam?'),
+       el('p', {}, 'Answered: ' + s.answered + '. Unanswered: ' + s.unanswered + '. Flagged: ' + s.flagged + '.'),
+       el('p', { class:'muted' }, 'Unanswered questions count as wrong. You cannot change answers after you submit.')],
+      [['Go back'], ['Submit', 'primary', async () => { try { results = await api('/api/exams/' + exam.id + '/submit', {}); exam.submitted = true; renderResults(); } catch (e) { renderExam(e.message); } }]]);
+}
+
+/* ---------- results ---------- */
+function fmtAns(q, labels) {
+  if (!labels || !labels.length) return 'No answer';
+  return labels.join(q.type === 'ordering' ? ' → ' : ', ');
+}
+function renderResults() {
+  tags();
+  const r = results, mode = exam.mode;
+  const top = el('div', { class:'card' },
+    el('p', { class:'muted' }, exam.mode === 'practice' ? 'Practice Mode score (answers were shown as you went)' : 'Practice score'),
+    el('div', { class:'score ' + (r.passed ? 'pass' : 'fail') }, r.score + ' / 1000'),
+    el('h2', { style:'margin-top:8px' }, (r.passed ? 'Pass' : 'Fail') + '  ·  ' + r.correct + ' of ' + r.total + ' correct  ·  pass mark ' + r.pass_mark),
+    el('p', { class:'muted' }, r.note),
+    !r.verified ? el('div', { class:'notice' }, 'Unverified practice set. The live study guide could not be checked when this exam was built.') : null,
+    el('div', { class:'bar' }, el('button', { class:'primary', onclick:() => { source = 'new'; start(mode, false); } }, 'Retake with new questions (uses tokens)'), el('button', { onclick:() => { source = 'bank'; start(mode, false); } }, 'Retake with saved questions (free)'), el('button', { onclick:() => home() }, 'Change mode')));
+  const areas = el('div', { class:'card' }, el('h2', {}, 'Objective-level performance'),
+    el('table', {}, el('tr', {}, el('th', {}, 'Objective area'), el('th', {}, 'Correct'), el('th', {}, 'Score'), el('th', {}, '')),
+      r.by_area.map(a => el('tr', {}, el('td', {}, a.area), el('td', {}, a.correct + ' / ' + a.total), el('td', {}, a.percent + '%'),
+        el('td', {}, el('div', { class:'meter' }, el('i', { style:'width:' + a.percent + '%' })))))));
+  const recs = el('div', { class:'card' }, el('h2', {}, 'Missed objectives and study recommendations'),
+    r.recommendations.length === 0 ? el('p', {}, 'You missed no objectives in this set.') :
+    [el('p', { class:'muted' }, 'Weakest area first. Each item is a skill from the ', el('a', { href:r.guide_url, target:'_blank', rel:'noopener' }, 'official SC-500 study guide'), '. Study these, then retake.'),
+     r.recommendations.map(a => el('div', {}, el('h3', {}, a.area + ' (' + a.percent + '%)'),
+       a.sections.map(s => el('div', {}, el('div', { style:'font-weight:600;font-size:15px' }, s.section),
+         el('ul', { style:'margin:4px 0 10px' }, s.objectives.map(o => el('li', {}, o.objective + ' (Q' + o.questions.join(', Q') + '). ',
+           el('a', { href:o.search, target:'_blank', rel:'noopener' }, 'Find on Microsoft Learn'))))))))]);
+  const c = r.case;
+  const review = el('div', { class:'card' }, el('h2', {}, 'Answers and explanations'),
+    c ? el('details', { class:'case' }, el('summary', {}, 'Case study: ' + c.title), el('div', { class:'body' },
+      'Overview\n' + c.overview + '\n\nExisting environment\n' + c.existing_environment + '\n\nProblem statements\n' + c.problem_statements + '\n\nRequirements\n' + c.requirements)) : null,
+    r.review.map(q => {
+      const given = q.answer || [];
+      return el('div', { class:'rev' },
+        el('div', { class:'hd' }, 'Question ' + q.id, el('span', { class:'pill ' + (q.is_correct ? 'ok' : 'no') }, q.is_correct ? 'Correct' : (given.length ? 'Incorrect' : 'Not answered')), q.flagged ? el('span', { class:'muted' }, 'Flagged') : null),
+        el('div', { class:'stem' }, q.stem),
+        q.options.map(o => { const right = q.type === 'ordering' ? false : q.correct.includes(o.label); const picked = q.type !== 'ordering' && given.includes(o.label);
+          return el('div', { class:'o' + (right ? ' c' : (picked ? ' w' : '')) }, o.label + '. ' + o.text + (picked ? '  (your answer)' : '')); }),
+        el('p', { style:'margin-top:10px' }, el('b', {}, 'Your answer: '), fmtAns(q, given), el('br'), el('b', {}, 'Correct answer: '), fmtAns(q, q.correct)),
+        el('div', { class:'exp' }, el('b', {}, 'Explanation. '), q.explanation),
+        el('p', { class:'muted', style:'margin-top:8px' }, 'Objective: ' + q.area + ' › ' + q.section + ' › ' + q.objective + '. ',
+          el('a', { href:q.doc.url, target:'_blank', rel:'noopener' }, 'Microsoft Learn: ' + q.doc.label)));
+    }));
+  app.replaceChildren(top, areas, recs, review);
+  window.scrollTo(0, 0);
+}
+
+/* ---------- boot ---------- */
+(async function () {
+  try {
+    cfg = await api('/api/config');
+    const want = new URLSearchParams(location.search).get('section');
+    if (want) { history.replaceState(null, '', '/'); const have = (cfg.bank.by_section || {})[want] || 0;
+      const run = src => { section = want; source = src; start('practice', false); };
+      if (have < cfg.modes.practice) return run('new');
+      drawHome();
+      return ask([el('h2', {}, 'Practice questions for this lab'), el('p', {}, 'You have ' + have + ' saved questions for this skill group.')],
+                 [['Write new (uses tokens)', '', () => run('new')], ['Use saved (free)', 'primary', () => run('bank')]]); }
+    const id = store.get('sc500_exam');
+    if (id) {
+      try { exam = await api('/api/exams/' + id);
+            if (exam.submitted) { results = await api('/api/exams/' + id + '/results'); return renderResults(); }
+            section = exam.section; source = exam.source; return openQuestion(0); } catch (e) { /* stale id */ }
+    }
+    home();
+  } catch (e) { app.replaceChildren(el('div', { class:'notice err' }, 'Could not reach the app server: ' + e.message)); }
+})();
+</script>
+</body>
+</html>

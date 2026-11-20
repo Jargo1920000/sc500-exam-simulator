@@ -1,0 +1,7 @@
+# Copy to backend.hcl and fill in. backend.hcl is git-ignored.
+resource_group_name  = "rg-sc500-tfstate"
+storage_account_name = "<your-state-storage-account>"
+container_name       = "tfstate"
+key                  = "sc500-labs.tfstate"
+use_azuread_auth     = true
+# subscription_id    = "<your-subscription-id>"   # only if it differs from your az login default

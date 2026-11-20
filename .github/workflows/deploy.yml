@@ -1,0 +1,68 @@
+# Deploys the exam app to Azure App Service on every push to main that changes app files.
+# Sign-in uses OpenID Connect (federated credentials), so no Azure password or client secret
+# is stored in GitHub. Run deploy/github-setup.sh once to create the identity and print the values.
+#
+# Needs these repository settings (Settings > Secrets and variables > Actions):
+#   Secrets:   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#   Variables: AZURE_WEBAPP_NAME, AZURE_RESOURCE_GROUP
+# Until AZURE_WEBAPP_NAME is set, the job is skipped instead of failing.
+
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - agent.py
+      - guide.py
+      - guide_snapshot.json
+      - labs.json
+      - requirements.txt
+      - bank.json
+      - static/**
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # lets the job ask GitHub for an OIDC token
+  contents: read
+
+concurrency:
+  group: deploy-exam-app
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ vars.AZURE_WEBAPP_NAME != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Check the app files are present
+        run: |
+          for f in app.py agent.py guide.py guide_snapshot.json labs.json requirements.txt static/index.html static/labs.html; do
+            [ -f "$f" ] || { echo "::error::Missing $f. The web app would fail without it."; exit 1; }
+          done
+
+      - name: Build the upload package
+        run: |
+          zip -qr app.zip app.py agent.py guide.py guide_snapshot.json labs.json requirements.txt static
+          if [ -f bank.json ]; then zip -q app.zip bank.json; fi
+          unzip -l app.zip
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy
+        env:
+          APP: ${{ vars.AZURE_WEBAPP_NAME }}
+          RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+        run: |
+          az webapp deploy -g "$RG" -n "$APP" --src-path app.zip --type zip
+          echo "Deployed to https://$(az webapp show -g "$RG" -n "$APP" --query defaultHostName -o tsv)" >> "$GITHUB_STEP_SUMMARY"
