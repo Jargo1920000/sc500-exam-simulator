@@ -15,3 +15,6 @@ deploy/.appname
 deploy/.paused
 bank_test.json
 .DS_Store
+
+# Cached Microsoft Learn links
+doc_links.json

@@ -32,6 +32,7 @@ from fastapi.responses import FileResponse, PlainTextResponse  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
 import agent  # noqa: E402
+import docs  # noqa: E402
 import guide as guide_mod  # noqa: E402
 
 PASS_MARK = 700
@@ -44,6 +45,7 @@ ALLOWED_USERS = [u.strip().lower() for u in os.environ.get("SC500_ALLOWED_USERS"
 DATA = Path(os.environ.get("SC500_DATA_DIR") or BASE)  # where saved exams and the question bank live
 SESSIONS = DATA / "sessions"
 SESSIONS.mkdir(parents=True, exist_ok=True)
+docs.init(DATA)
 LOCK = threading.Lock()
 EXAMS: dict[str, dict] = {}
 
@@ -182,9 +184,8 @@ def _status(exam: dict) -> dict:
 
 
 def _doc(q: dict) -> dict:
-    """A Microsoft Learn search link for the topic. Search links cannot be dead or made up."""
-    term = q.get("doc_query") or q["objective"]
-    return {"label": term, "url": "https://learn.microsoft.com/en-us/search/?terms=" + quote(term)}
+    """The Microsoft Learn page for this question's topic. Falls back to a Learn search link."""
+    return docs.resolve(q.get("doc_query") or q["objective"])
 
 
 def _feedback(q: dict) -> dict:
@@ -225,6 +226,10 @@ def _results(exam: dict) -> dict:
     for name in exam["area_names"]:
         areas[name] = {"area": name, "correct": 0, "total": 0}
     missed: dict[tuple, dict] = {}
+    # Look up the Learn pages for every question at once, so the review page loads fast.
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(_doc, qs))
     review = []
     for q in qs:
         ok = _is_correct(q)
@@ -347,6 +352,12 @@ def save_selection(body: LabSelection):
     text = FW_LINE.sub(fw_line, text) if FW_LINE.search(text) else text.rstrip() + "\n" + fw_line + "\n"
     TFVARS.write_text(text, encoding="utf-8")
     return _selection()
+
+
+@app.get("/api/doclink")
+def doclink(q: str):
+    """Check which Microsoft Learn page a search term resolves to. exact=false means it fell back to search."""
+    return docs.resolve(q)
 
 
 @app.get("/api/config")

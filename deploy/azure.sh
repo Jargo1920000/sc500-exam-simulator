@@ -99,7 +99,7 @@ deploy)
   az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings "${SETTINGS[@]}"
 
   ZIP="$(mktemp -d)/sc500-app.zip"
-  zip -qr "$ZIP" app.py agent.py guide.py guide_snapshot.json labs.json requirements.txt static \
+  zip -qr "$ZIP" app.py agent.py docs.py guide.py guide_snapshot.json labs.json requirements.txt static \
     $( [ -f bank.json ] && echo bank.json )
   echo "Uploading the code. The build takes a few minutes."
   az webapp deploy -g "$RG" -n "$APP" --src-path "$ZIP" --type zip -o none
