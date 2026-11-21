@@ -224,7 +224,7 @@ function renderExam(msg) {
       q.type === 'ordering' ? 'Correct order:' : 'Correct answer: ' + fmtAns(q, fb.correct)),
     q.type === 'ordering' ? el('ol', { style:'margin:0 0 8px' }, fb.correct.map(l => el('li', {}, text[l]))) : null,
     el('p', {}, fb.explanation),
-    el('p', {}, el('b', {}, 'Microsoft Learn: '), el('a', { href:fb.doc.url, target:'_blank', rel:'noopener' }, fb.doc.label)),
+    el('p', {}, el('b', {}, 'Microsoft Learn: '), el('a', { href:fb.doc.url, target:'_blank', rel:'noopener' }, (fb.doc.exact ? '' : 'Search: ') + fb.doc.label)),
     el('p', { class:'muted', style:'margin:0' }, 'Objective: ' + fb.area + ' › ' + fb.section + ' › ' + fb.objective + '. ',
       el('a', { href:exam.guide_url, target:'_blank', rel:'noopener' }, 'Study guide'))) : null;
   const mainBtn = !practice ? el('button', { class:'primary', onclick:() => go(cur === n - 1 ? cur : cur + 1) }, cur === n - 1 ? 'Save answer' : 'Save and next')
@@ -310,7 +310,7 @@ function renderResults() {
         el('p', { style:'margin-top:10px' }, el('b', {}, 'Your answer: '), fmtAns(q, given), el('br'), el('b', {}, 'Correct answer: '), fmtAns(q, q.correct)),
         el('div', { class:'exp' }, el('b', {}, 'Explanation. '), q.explanation),
         el('p', { class:'muted', style:'margin-top:8px' }, 'Objective: ' + q.area + ' › ' + q.section + ' › ' + q.objective + '. ',
-          el('a', { href:q.doc.url, target:'_blank', rel:'noopener' }, 'Microsoft Learn: ' + q.doc.label)));
+          el('a', { href:q.doc.url, target:'_blank', rel:'noopener' }, (q.doc.exact ? 'Microsoft Learn: ' : 'Search Microsoft Learn: ') + q.doc.label)));
     }));
   app.replaceChildren(top, areas, recs, review);
   window.scrollTo(0, 0);

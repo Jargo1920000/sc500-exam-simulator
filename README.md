@@ -93,6 +93,7 @@ You can run it on your own computer, or host it on Azure App Service behind Micr
 | --- | --- |
 | `app.py` | Web server, exam state, scoring, question bank, lab endpoints, sign-in check |
 | `agent.py` | Question planning and the Claude API calls |
+| `docs.py` | Finds the Microsoft Learn page for each question, with a search link as fallback |
 | `guide.py` | Loads and reads the Microsoft Learn study guide |
 | `guide_snapshot.json` | Saved copy of the study guide, used only for unverified sets |
 | `labs.json` | The 12 labs: scenarios, tasks, steps, checks and clean-up |

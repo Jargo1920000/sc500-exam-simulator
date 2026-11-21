@@ -15,6 +15,7 @@ on:
     paths:
       - app.py
       - agent.py
+      - docs.py
       - guide.py
       - guide_snapshot.json
       - labs.json
@@ -42,13 +43,13 @@ jobs:
 
       - name: Check the app files are present
         run: |
-          for f in app.py agent.py guide.py guide_snapshot.json labs.json requirements.txt static/index.html static/labs.html; do
+          for f in app.py agent.py docs.py guide.py guide_snapshot.json labs.json requirements.txt static/index.html static/labs.html; do
             [ -f "$f" ] || { echo "::error::Missing $f. The web app would fail without it."; exit 1; }
           done
 
       - name: Build the upload package
         run: |
-          zip -qr app.zip app.py agent.py guide.py guide_snapshot.json labs.json requirements.txt static
+          zip -qr app.zip app.py agent.py docs.py guide.py guide_snapshot.json labs.json requirements.txt static
           if [ -f bank.json ]; then zip -q app.zip bank.json; fi
           unzip -l app.zip
 

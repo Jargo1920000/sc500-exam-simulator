@@ -40,7 +40,7 @@ QUESTION_SCHEMA = {
         "options": {"type": "array", "items": {"type": "string"}},
         "correct_indices": {"type": "array", "items": {"type": "integer"}},
         "explanation": {"type": "string"},
-        "doc_query": {"type": "string", "description": "3 to 7 words to search on Microsoft Learn for the doc page that covers the correct answer, for example 'Key Vault firewall trusted services'."},
+        "doc_query": {"type": "string", "description": "3 to 7 words that match the title of the one Microsoft Learn article that best explains the correct answer. Use the product name and the feature, for example 'Configure Azure Key Vault networking settings' or 'Microsoft Foundry guardrails and controls'. No question wording."},
     },
     "required": ["slot", "stem", "options", "correct_indices", "explanation", "doc_query"],
 }
