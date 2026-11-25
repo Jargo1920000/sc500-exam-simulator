@@ -15,10 +15,11 @@ resource "random_string" "suffix" {
 }
 
 locals {
-  sfx  = random_string.suffix.result
-  rg   = data.azurerm_resource_group.lab.name
-  loc  = var.location
-  tags = merge(var.tags, { Purpose = "SC-500 Lab" })
+  sfx = random_string.suffix.result
+  rg  = data.azurerm_resource_group.lab.name
+  loc = var.location
+  # Start from the resource group tags: a policy copies them onto every resource, so setting them here stops drift.
+  tags = merge(data.azurerm_resource_group.lab.tags, var.tags, { Purpose = "SC-500 Lab" })
 
   # One on/off switch per lab.
   lab = { for l in [
