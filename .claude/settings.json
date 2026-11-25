@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest *)",
+      "Bash(python -m pytest *)",
+      "Bash(python3 -m pytest *)",
+      "Bash(python scripts/check_deploy_lists.py)",
+      "Bash(python3 scripts/check_deploy_lists.py)",
+      "Bash(bash scripts/check_secrets.sh)",
+      "Bash(scripts/check_secrets.sh)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git add *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(az *)",
+      "Bash(terraform apply *)",
+      "Bash(terraform destroy *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/check_secrets.sh\" 1>&2 || exit 2",
+            "timeout": 60,
+            "statusMessage": "Checking for secrets before commit"
+          }
+        ]
+      }
+    ]
+  }
+}
