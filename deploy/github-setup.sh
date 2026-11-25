@@ -16,7 +16,7 @@ SUBSCRIPTION="${SUBSCRIPTION:-$(az account show --query id -o tsv)}"
 # owner/repo from your git remote. It must match GitHub's casing exactly. Override with REPO=owner/name.
 REPO="${REPO:-$(git remote get-url origin 2>/dev/null | sed -E 's#(\.git)?$##; s#^.*github\.com[:/]##')}"
 BRANCH="${BRANCH:-main}"
-RG="${RG:-rg-sc500-exam-app}"
+RG="${RG:-$(cat deploy/.rg 2>/dev/null || echo rg-sc500-exam-app)}"
 APP="${APP:-$(cat deploy/.appname 2>/dev/null || true)}"
 NAME="github-sc500-exam-simulator-deploy"
 

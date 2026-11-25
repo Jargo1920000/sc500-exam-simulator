@@ -12,7 +12,8 @@
 set -euo pipefail
 
 SUBSCRIPTION="${SUBSCRIPTION:-$(az account show --query id -o tsv)}"   # defaults to your current az login subscription
-RG="${RG:-rg-sc500-exam-app}"     # resource group for the web app. Created if missing
+# Resource group for the web app, created if missing. Read from deploy/.rg, which create saves.
+RG="${RG:-$(cat "$(dirname "$0")/.rg" 2>/dev/null || echo rg-sc500-exam-app)}"
 LOCATION="${LOCATION:-uksouth}"   # if you hit an App Service quota error, try LOCATION=ukwest
 PLAN="asp-sc500-exam-app"
 SKU="${SKU:-B1}"                       # B1 costs about 10 pounds a month. Try SKU=F1 for the free tier.
@@ -20,6 +21,7 @@ TAGS=(Purpose="SC-500 Exam App")       # not the lab tag, so the lab destroy che
 
 cd "$(dirname "$0")/.."
 NAME_FILE="deploy/.appname"
+RG_FILE="deploy/.rg"
 
 app_name() {
   [ -f "$NAME_FILE" ] || { echo "Run './deploy/azure.sh create' first."; exit 1; }
@@ -31,7 +33,7 @@ PAUSE_FILE="deploy/.paused"   # remembers the tier and Always On setting from be
 # The plan the app runs on. Read from Azure, so plans made in the portal work too.
 plan_name() {
   local id
-  id=$(az webapp show -g "$RG" -n "$1" --query appServicePlanId -o tsv)
+  id=$(az webapp show -g "$RG" -n "$1" --query "serverFarmId || appServicePlanId" -o tsv)  # name differs by az version
   echo "${id##*/}"
 }
 
@@ -56,6 +58,7 @@ create)
   az appservice plan create -g "$RG" -n "$PLAN" -l "$LOCATION" --is-linux --sku "$SKU" --tags "${TAGS[@]}" -o none
   az webapp create -g "$RG" -p "$PLAN" -n "$APP" --runtime "PYTHON:3.12" --https-only true --tags "${TAGS[@]}" -o none
   echo "$APP" > "$NAME_FILE"   # save the name only once the app exists
+  echo "$RG" > "$RG_FILE"
   az webapp config set -g "$RG" -n "$APP" -o none \
     --startup-file "python -m uvicorn app:app --host 0.0.0.0 --port 8000" \
     --ftps-state Disabled --min-tls-version 1.2
@@ -182,7 +185,7 @@ delete)
   [ "$OK" = "yes" ] || exit 0
   az webapp delete -g "$RG" -n "$APP"
   az appservice plan delete -g "$RG" -n "$P" --yes
-  rm -f "$NAME_FILE" "$PAUSE_FILE"
+  rm -f "$NAME_FILE" "$RG_FILE" "$PAUSE_FILE"
   echo "Deleted. Also delete the app registration: Entra admin center > App registrations > $APP."
   ;;
 

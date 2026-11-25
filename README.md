@@ -107,7 +107,7 @@ You can run it on your own computer, or host it on Azure App Service behind Micr
 | `deploy/github-setup.sh` | One-time setup for GitHub Actions deploys |
 | `.github/workflows/deploy.yml` | Deploys to Azure on each push to `main` |
 
-Files that stay on your computer and never go in Git: `.env`, `.venv/`, `sessions/`, `deploy/.appname`, and Terraform state.
+Files that stay on your computer and never go in Git: `.env`, `.venv/`, `sessions/`, `deploy/.appname`, `deploy/.rg`, and Terraform state.
 
 ---
 
@@ -336,10 +336,11 @@ bash deploy/azure.sh deploy
    | `SC500_DATA_DIR` | `/home/data` |
    | `SC500_ALLOWED_USERS` | your sign-in name |
 
-4. Save the app name for the script, then deploy:
+4. Save the app name and resource group for the scripts, then deploy:
    ```bash
    echo "<your-app-name>" > deploy/.appname
-   RG=<your-resource-group> bash deploy/azure.sh deploy
+   echo "<your-resource-group>" > deploy/.rg
+   bash deploy/azure.sh deploy
    ```
 
 ### Turn on sign-in
@@ -433,7 +434,7 @@ The workflow ships code only. Your Anthropic API key and other app settings stay
    ```
 2. Ship it, either way:
    - **With GitHub Actions:** commit and push to `main`.
-   - **By hand:** `RG=<your-resource-group> bash deploy/azure.sh deploy`
+   - **By hand:** `bash deploy/azure.sh deploy`
 3. Allow two to three minutes for the build, then refresh.
 
 A deploy keeps saved exams, the question bank, app settings and sign-in. A hand deploy also resends your API key from `.env`.
@@ -450,7 +451,7 @@ If you add a new file the app needs, add it to the zip list in both `deploy/azur
 | `externally-managed-environment` on macOS | Create and activate `.venv` first |
 | `tool_choice ... not supported for this model` | Update `agent.py`. The current version asks for the tool call in the prompt |
 | Quota error: `Current Limit (B1 App Service instances): 0` | Try another region (`LOCATION=ukwest`), try `SKU=F1`, or raise a support request for App Service quota |
-| `ResourceNotFound` for the web app | `deploy/.appname` or `RG` doesn't match. Fix the name in `.appname` and pass `RG=` |
+| `ResourceNotFound` for the web app | `deploy/.appname` or `deploy/.rg` doesn't match. Fix the names in those files, or pass `RG=` |
 | "Sign-in is not turned on" from `deploy` | Add the Microsoft identity provider in the portal first |
 | 503 Service Unavailable | Run `deploy/azure.sh logs` and look for the lines below |
 | Log: `No module named uvicorn` | The build didn't run. Set `SCM_DO_BUILD_DURING_DEPLOYMENT=true` and `ENABLE_ORYX_BUILD=true`, then deploy again |
