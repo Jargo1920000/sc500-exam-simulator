@@ -1,0 +1,126 @@
+{
+ "note": "Fixed eval set. Do not edit: changing it breaks comparison with earlier runs.",
+ "guide_snapshot_date": "2026-11-14",
+ "objectives": [
+  {
+   "area": "Manage identity, access, and governance",
+   "section": "Secure access to resources by using Microsoft Entra ID",
+   "objective": "Implement and configure Privileged Identity Management (PIM)",
+   "type": "single"
+  },
+  {
+   "area": "Manage identity, access, and governance",
+   "section": "Secure secrets and keys by using Azure Key Vault",
+   "objective": "Deploy Key Vault",
+   "type": "multiple"
+  },
+  {
+   "area": "Manage identity, access, and governance",
+   "section": "Implement governance to enforce security and regulatory compliance",
+   "objective": "Implement and configure security controls by using Azure Policy, including built-in and custom policy definitions",
+   "type": "single"
+  },
+  {
+   "area": "Manage identity, access, and governance",
+   "section": "Secure access to resources by using Microsoft Entra ID",
+   "objective": "Implement and configure authentication methods, including multifactor authentication (MFA) and passwordless",
+   "type": "solution"
+  },
+  {
+   "area": "Manage identity, access, and governance",
+   "section": "Secure secrets and keys by using Azure Key Vault",
+   "objective": "Configure access to Key Vault",
+   "type": "single"
+  },
+  {
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for storage accounts",
+   "objective": "Implement and configure security for storage accounts",
+   "type": "multiple"
+  },
+  {
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for databases",
+   "objective": "Implement platform-level security configurations in Azure SQL",
+   "type": "single"
+  },
+  {
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for Azure network services",
+   "objective": "Implement and manage network security groups (NSGs) and application security groups (ASGs)",
+   "type": "ordering"
+  },
+  {
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for storage accounts",
+   "objective": "Implement Defender for Storage threat protection configurations",
+   "type": "single"
+  },
+  {
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for databases",
+   "objective": "Configure Defender for Databases protection across Azure database services",
+   "type": "multiple"
+  },
+  {
+   "area": "Secure storage, databases, and networking",
+   "section": "Implement security for Azure network services",
+   "objective": "Configure security for an Azure Virtual WAN",
+   "type": "single"
+  },
+  {
+   "area": "Secure compute",
+   "section": "Implement security for AI",
+   "objective": "Identify overexposure of data in SharePoint",
+   "type": "solution"
+  },
+  {
+   "area": "Secure compute",
+   "section": "Implement security for servers and virtual machines (VMs)",
+   "objective": "Implement and configure disk encryption",
+   "type": "single"
+  },
+  {
+   "area": "Secure compute",
+   "section": "Implement security for application platform services",
+   "objective": "Detect misconfigurations and runtime risks in container workloads by using Defender for Containers",
+   "type": "multiple"
+  },
+  {
+   "area": "Secure compute",
+   "section": "Implement security for AI",
+   "objective": "Enable and configure real-time protection for Microsoft Copilot Studio agents",
+   "type": "single"
+  },
+  {
+   "area": "Secure compute",
+   "section": "Implement security for servers and virtual machines (VMs)",
+   "objective": "Enable and enforce use of just-in-time (JIT) VM access",
+   "type": "ordering"
+  },
+  {
+   "area": "Manage and monitor security posture",
+   "section": "Manage security posture by using Defender for Cloud",
+   "objective": "Identify security risks by using Defender CSPM",
+   "type": "single"
+  },
+  {
+   "area": "Manage and monitor security posture",
+   "section": "Implement activity and event collection in Microsoft Sentinel",
+   "objective": "Create and connect workspaces in Microsoft Sentinel",
+   "type": "multiple"
+  },
+  {
+   "area": "Manage and monitor security posture",
+   "section": "Implement Microsoft Security Copilot",
+   "objective": "Configure workspaces for Security Copilot",
+   "type": "single"
+  },
+  {
+   "area": "Manage and monitor security posture",
+   "section": "Manage security posture by using Defender for Cloud",
+   "objective": "Enable and configure Defender for Cloud workload protection plans",
+   "type": "solution"
+  }
+ ]
+}
