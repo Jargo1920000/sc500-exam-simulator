@@ -1,0 +1,27 @@
+# Runs the repo checks in scripts/ on every pull request.
+
+name: Checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check the deploy zip lists
+        run: python scripts/check_deploy_lists.py
+
+      - name: Check for secrets
+        run: bash scripts/check_secrets.sh

@@ -17,4 +17,7 @@ bank_test.json
 .DS_Store
 
 # Cached Microsoft Learn links
-doc_links.json
+doc_links*.json
+
+# Eval mock runs (real runs in evals/results/ are kept for comparison)
+evals/results/*_mock.json
