@@ -99,7 +99,6 @@ deploy)
   SETTINGS=(ANTHROPIC_API_KEY="$KEY")
   MODEL=$(grep -E '^ANTHROPIC_MODEL=' .env | head -1 | cut -d= -f2- | tr -d '"'"'"' ' || true)
   [ -z "$MODEL" ] || SETTINGS+=(ANTHROPIC_MODEL="$MODEL")
-  az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings "${SETTINGS[@]}"
 
   ZIP="$(mktemp -d)/sc500-app.zip"
   zip -qr "$ZIP" app.py agent.py docs.py guide.py guide_snapshot.json labs.json requirements.txt static \
@@ -107,6 +106,10 @@ deploy)
   echo "Uploading the code. The build takes a few minutes."
   az webapp deploy -g "$RG" -n "$APP" --src-path "$ZIP" --type zip -o none
   rm -f "$ZIP"
+
+  # Change settings only after the build: a settings change restarts the app and kills a running build.
+  echo "Updating the app settings. The app restarts once."
+  az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings "${SETTINGS[@]}"
   echo "Done: https://$(az webapp show -g "$RG" -n "$APP" --query defaultHostName -o tsv)"
   ;;
 
