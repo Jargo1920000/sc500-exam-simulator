@@ -1,0 +1,962 @@
+{
+ "model": "claude-sonnet-5-5",
+ "judge_model": "claude-opus-5-5",
+ "date": "2026-11-25T22:24:17.757277+00:00",
+ "mock": false,
+ "metrics": {
+  "format_pass_rate": 1.0,
+  "exact_link_rate": 1.0,
+  "answer_accuracy": 1.0,
+  "tokens_per_question": 1138,
+  "counts": {
+   "objectives": 20,
+   "format_ok": 20,
+   "correct": 14,
+   "incorrect": 0,
+   "not_covered": 6,
+   "no_page": 0,
+   "judge_error": 0
+  },
+  "write_tokens": {
+   "input": 6834,
+   "output": 15917
+  },
+  "judge_tokens": {
+   "input": 98913,
+   "output": 6469
+  }
+ },
+ "questions": [
+  {
+   "slot": 1,
+   "objective": "Implement and configure Privileged Identity Management (PIM)",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Manage identity, access, and governance",
+    "section": "Secure access to resources by using Microsoft Entra ID",
+    "objective": "Implement and configure Privileged Identity Management (PIM)",
+    "doc_query": "Configure Azure resource role settings in PIM",
+    "type": "single",
+    "stem": "Contoso has an Azure subscription named Sub1 that is linked to a Microsoft Entra tenant with Microsoft Entra ID P2 licenses. A group named SecOps needs to be able to use the Contributor role on Sub1 only when performing incident response. Activation must require approval from the security manager and a business justification, and the access must expire automatically after 4 hours. The solution must follow the principle of least privilege and minimize administrative effort. What should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Assign the Contributor role to SecOps on Sub1 by using Azure RBAC, and create a Conditional Access policy that requires MFA for the Azure management app."
+     },
+     {
+      "label": "B",
+      "text": "Create an access package in Microsoft Entra entitlement management that assigns the Contributor role on Sub1, with an expiration of 4 hours."
+     },
+     {
+      "label": "C",
+      "text": "Create an active assignment for the Contributor role on Sub1 for the SecOps group in PIM with a 4-hour end date, and configure an access review."
+     },
+     {
+      "label": "D",
+      "text": "Create an eligible assignment for the Contributor role on Sub1 for the SecOps group in PIM, and configure the role settings to require approval, justification, and a maximum activation duration of 4 hours."
+     }
+    ],
+    "correct": [
+     "D"
+    ],
+    "required": 1,
+    "explanation": "An eligible assignment in PIM with role settings requiring approval, justification, and a 4-hour maximum activation duration provides just-in-time, time-bound access. An active assignment grants standing access during its window and does not require activation. A permanent RBAC assignment with Conditional Access gives standing access without approval. Entitlement management access packages are not designed for approval-gated role activation of Azure roles in this way and do not give activation-time controls."
+   },
+   "doc_query": "Configure Azure resource role settings in PIM",
+   "link": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-resource-roles-configure-role-settings",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says PIM role settings for Azure resource roles can require approval to activate an eligible assignment, require justification on activation, and set an activation maximum duration of 1 to 24 hours. That supports D, an eligible PIM assignment with those settings, as the just-in-time option that expires after 4 hours.",
+    "in": 5120,
+    "out": 172
+   }
+  },
+  {
+   "slot": 2,
+   "objective": "Deploy Key Vault",
+   "type": "multiple",
+   "format_ok": true,
+   "question": {
+    "area": "Manage identity, access, and governance",
+    "section": "Secure secrets and keys by using Azure Key Vault",
+    "objective": "Deploy Key Vault",
+    "doc_query": "Azure Key Vault soft-delete and purge protection",
+    "type": "multiple",
+    "stem": "Fabrikam plans to deploy an Azure key vault named KV1 to store encryption keys for an Azure SQL database that uses customer-managed keys. Deleted keys must be recoverable for a defined period, and a malicious administrator must not be able to permanently purge keys before that period ends. KV1 must also be reachable only from a virtual network named VNet1. Which three actions should you perform? Each correct answer presents part of the solution. (Choose three.)",
+    "options": [
+     {
+      "label": "A",
+      "text": "Configure the KV1 networking settings to disable public network access and add a private endpoint in VNet1."
+     },
+     {
+      "label": "B",
+      "text": "Create KV1 by using the Standard tier and the Vault access policy permission model so that purge permissions can be restricted per user."
+     },
+     {
+      "label": "C",
+      "text": "Enable Azure Disk Encryption on KV1 to protect the stored keys."
+     },
+     {
+      "label": "D",
+      "text": "Enable purge protection on KV1."
+     },
+     {
+      "label": "E",
+      "text": "Configure a retention period for soft-delete on KV1 when creating it."
+     }
+    ],
+    "correct": [
+     "A",
+     "D",
+     "E"
+    ],
+    "required": 3,
+    "explanation": "Soft-delete with a retention period allows recovery, and purge protection prevents purging until the retention period elapses, even by administrators. Disabling public access and using a private endpoint in VNet1 restricts network reachability. The permission model does not provide purge protection, and Azure Disk Encryption is a feature for VMs, not a setting of a key vault."
+   },
+   "doc_query": "Azure Key Vault soft-delete and purge protection",
+   "link": "https://learn.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview",
+   "exact_link": true,
+   "judge": {
+    "verdict": "not_covered",
+    "reason": "The page supports D and E: the soft-delete retention period (7–90 days) is set when the vault is created, and with purge protection on, deleted objects can't be purged until that period ends. It says nothing about network access, private endpoints, or VNet restrictions, so option A, and with it the full three-answer key, can't be confirmed from this page.",
+    "in": 4021,
+    "out": 440
+   }
+  },
+  {
+   "slot": 3,
+   "objective": "Implement and configure security controls by using Azure Policy, including built-in and custom policy definitions",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Manage identity, access, and governance",
+    "section": "Implement governance to enforce security and regulatory compliance",
+    "objective": "Implement and configure security controls by using Azure Policy, including built-in and custom policy definitions",
+    "doc_query": "Azure Policy definition effect Deny and Audit",
+    "type": "single",
+    "stem": "Adatum has several Azure subscriptions in a management group named MG1. You must ensure that all new storage accounts in MG1 reject requests that use HTTP and that any existing noncompliant storage accounts are reported. Existing storage accounts must not be modified automatically. The solution must minimize administrative effort. What should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Create a custom policy definition that uses the DeployIfNotExists effect and assign it to each subscription."
+     },
+     {
+      "label": "B",
+      "text": "Assign the built-in 'Secure transfer to storage accounts should be enabled' policy to MG1 with the Deny effect."
+     },
+     {
+      "label": "C",
+      "text": "Create an Azure Blueprint that deploys a storage account template and assign it to MG1."
+     },
+     {
+      "label": "D",
+      "text": "Assign the built-in policy with the Modify effect to MG1 and create a remediation task."
+     }
+    ],
+    "correct": [
+     "B"
+    ],
+    "required": 1,
+    "explanation": "The built-in policy assigned at MG1 with Deny blocks creation of noncompliant new storage accounts, and compliance reporting flags existing noncompliant ones without changing them. A custom DeployIfNotExists definition and a Modify remediation would change existing resources and require more effort. A blueprint deploying a template does not enforce or report on all storage accounts."
+   },
+   "doc_query": "Azure Policy definition effect Deny and Audit",
+   "link": "https://learn.microsoft.com/azure/governance/policy/concepts/effect-audit",
+   "exact_link": true,
+   "judge": {
+    "verdict": "not_covered",
+    "reason": "The page only covers the audit effect: it logs a warning and marks resources non-compliant without blocking the request. It says nothing about the Deny effect, Modify or DeployIfNotExists remediation, or the built-in 'Secure transfer to storage accounts should be enabled' policy, so it can't confirm or rule out option B.",
+    "in": 3020,
+    "out": 266
+   }
+  },
+  {
+   "slot": 4,
+   "objective": "Implement and configure authentication methods, including multifactor authentication (MFA) and passwordless",
+   "type": "solution",
+   "format_ok": true,
+   "question": {
+    "area": "Manage identity, access, and governance",
+    "section": "Secure access to resources by using Microsoft Entra ID",
+    "objective": "Implement and configure authentication methods, including multifactor authentication (MFA) and passwordless",
+    "doc_query": "Enable passkey FIDO2 authentication Microsoft Entra ID",
+    "type": "solution",
+    "stem": "Tailwind Traders uses Microsoft Entra ID P1 and wants to enable passwordless sign-in for its employees by using phishing-resistant methods. Employees use company-managed Windows 11 laptops and personal iOS phones.\n\nSolution: You enable the FIDO2 security key authentication method in the Microsoft Entra authentication methods policy for the Employees group and require users to register a FIDO2 security key.\n\nDoes this meet the goal?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Yes"
+     },
+     {
+      "label": "B",
+      "text": "No"
+     }
+    ],
+    "correct": [
+     "A"
+    ],
+    "required": 1,
+    "explanation": "FIDO2 security keys are a passwordless, phishing-resistant authentication method that can be enabled for a targeted group in the authentication methods policy. It is available with Microsoft Entra ID P1 and works with Windows 11 devices and supported mobile platforms."
+   },
+   "doc_query": "Enable passkey FIDO2 authentication Microsoft Entra ID",
+   "link": "https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-passkeys-fido2",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page lists FIDO2 security keys as device-bound passkeys, which it calls phishing-resistant and passwordless. It also says they can be used to sign in to Microsoft Entra ID and Windows 11 devices, so the solution meets the goal. The page doesn't confirm the P1 licensing or group-targeting details in the explanation, but those don't change the answer.",
+    "in": 4747,
+    "out": 440
+   }
+  },
+  {
+   "slot": 5,
+   "objective": "Configure access to Key Vault",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Manage identity, access, and governance",
+    "section": "Secure secrets and keys by using Azure Key Vault",
+    "objective": "Configure access to Key Vault",
+    "doc_query": "Provide access to Key Vault with Azure RBAC",
+    "type": "single",
+    "stem": "Litware has an Azure key vault named KV1 that uses the Azure role-based access control permission model. An Azure web app named App1 uses a system-assigned managed identity and must read secrets from KV1. App1 must not be able to read keys or certificates, or modify any secrets. The solution must follow the principle of least privilege. What should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Assign the Key Vault Secrets User role to the managed identity of App1 at the scope of KV1."
+     },
+     {
+      "label": "B",
+      "text": "Assign the Key Vault Secrets Officer role to the managed identity of App1 at the resource group scope."
+     },
+     {
+      "label": "C",
+      "text": "Add an access policy to KV1 that grants Get permission on secrets to App1."
+     },
+     {
+      "label": "D",
+      "text": "Assign the Key Vault Reader role to the managed identity of App1 at the scope of KV1."
+     }
+    ],
+    "correct": [
+     "A"
+    ],
+    "required": 1,
+    "explanation": "Key Vault Secrets User grants read access to secret contents and is scoped to KV1. Key Vault Reader only reads metadata, not secret values. Access policies are not used when the vault uses the Azure RBAC permission model. Secrets Officer permits modifying secrets and at resource group scope is overly broad."
+   },
+   "doc_query": "Provide access to Key Vault with Azure RBAC",
+   "link": "https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says Key Vault Secrets User can \"Read secret contents,\" and it recommends assigning roles at the key vault scope, which makes option A the least-privilege choice. The other options fail: Key Vault Reader can't read secret values, Secrets Officer can perform any action on secrets, and turning on the RBAC permission model invalidates all access policy permissions.",
+    "in": 8226,
+    "out": 190
+   }
+  },
+  {
+   "slot": 6,
+   "objective": "Implement and configure security for storage accounts",
+   "type": "multiple",
+   "format_ok": true,
+   "question": {
+    "area": "Secure storage, databases, and networking",
+    "section": "Implement security for storage accounts",
+    "objective": "Implement and configure security for storage accounts",
+    "doc_query": "Prevent Shared Key authorization for storage account",
+    "type": "multiple",
+    "stem": "Contoso has an Azure subscription that contains a storage account named storage1. Applications in VNet1 read and write blobs in storage1 by using shared access signatures that are signed with the storage account keys.\n\nYou need to ensure that all requests to the blob data in storage1 are authorized only by using Microsoft Entra ID, and that the blob endpoint is reachable only from VNet1 over the Microsoft backbone network. The solution must minimize the exposure of storage1 to the internet.\n\nWhich two actions should you perform? Each correct answer presents part of the solution. (Choose two.)",
+    "options": [
+     {
+      "label": "A",
+      "text": "Create a stored access policy on each container in storage1."
+     },
+     {
+      "label": "B",
+      "text": "Enable blob versioning and soft delete on storage1."
+     },
+     {
+      "label": "C",
+      "text": "Enable the Secure transfer required setting on storage1."
+     },
+     {
+      "label": "D",
+      "text": "Set Allow storage account key access to Disabled on storage1."
+     },
+     {
+      "label": "E",
+      "text": "Create a private endpoint for the blob subresource of storage1 in VNet1 and set Public network access to Disabled."
+     }
+    ],
+    "correct": [
+     "D",
+     "E"
+    ],
+    "required": 2,
+    "explanation": "Disabling shared key access forces Microsoft Entra authorization (and blocks account-key-signed SAS), and a private endpoint with public network access disabled limits network reachability to VNet1 over private connectivity. Stored access policies still rely on account-key-signed SAS tokens. Secure transfer only enforces HTTPS, and versioning/soft delete protect data but do not affect authorization or network exposure."
+   },
+   "doc_query": "Prevent Shared Key authorization for storage account",
+   "link": "https://learn.microsoft.com/en-us/azure/storage/common/shared-key-authorization-prevent",
+   "exact_link": true,
+   "judge": {
+    "verdict": "not_covered",
+    "reason": "The page supports D: setting \"Allow storage account key access\" to Disabled means only Microsoft Entra-authorized requests succeed, and service/account SAS (Shared Key-signed) requests are denied. However, the page never mentions private endpoints or disabling public network access, so it can't confirm E.",
+    "in": 8503,
+    "out": 315
+   }
+  },
+  {
+   "slot": 7,
+   "objective": "Implement platform-level security configurations in Azure SQL",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Secure storage, databases, and networking",
+    "section": "Implement security for databases",
+    "objective": "Implement platform-level security configurations in Azure SQL",
+    "doc_query": "Azure SQL Microsoft Entra-only authentication",
+    "type": "single",
+    "stem": "Fabrikam has an Azure SQL logical server named SQL1 that hosts 20 databases. A Microsoft Entra administrator is already configured for SQL1. Several applications still connect by using SQL authentication logins.\n\nYou need to ensure that all databases on SQL1 accept only Microsoft Entra identities for authentication. The solution must minimize administrative effort.\n\nWhat should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Set Deny public network access to Yes on SQL1."
+     },
+     {
+      "label": "B",
+      "text": "Enable transparent data encryption with a customer-managed key on SQL1."
+     },
+     {
+      "label": "C",
+      "text": "Enable Always Encrypted on each database."
+     },
+     {
+      "label": "D",
+      "text": "Enable Microsoft Entra-only authentication on SQL1."
+     }
+    ],
+    "correct": [
+     "D"
+    ],
+    "required": 1,
+    "explanation": "Microsoft Entra-only authentication is a server-level setting that disables SQL authentication, including the server admin login, for all databases on the logical server. Denying public network access restricts network paths but SQL logins still work over private endpoints. Always Encrypted and TDE protect data at rest or in use and do not control authentication methods."
+   },
+   "doc_query": "Azure SQL Microsoft Entra-only authentication",
+   "link": "https://learn.microsoft.com/azure/azure-sql/database/authentication-azure-ad-only-authentication-tutorial?view=azuresql",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page explains that Microsoft Entra-only authentication is turned on at the SQL server resource level (\"Support only Microsoft Entra authentication for this server\"), and the server needs a Microsoft Entra admin first. Once it is on, SQL authentication logins fail with \"Azure Active Directory only authentication is enabled.\" So D is the right answer.",
+    "in": 6822,
+    "out": 187
+   }
+  },
+  {
+   "slot": 8,
+   "objective": "Implement and manage network security groups (NSGs) and application security groups (ASGs)",
+   "type": "ordering",
+   "format_ok": true,
+   "question": {
+    "area": "Secure storage, databases, and networking",
+    "section": "Implement security for Azure network services",
+    "objective": "Implement and manage network security groups (NSGs) and application security groups (ASGs)",
+    "doc_query": "Application security groups Azure virtual network",
+    "type": "ordering",
+    "stem": "Northwind Traders has an Azure virtual network named VNet1 with a subnet named Subnet1. Subnet1 contains web servers (VM1, VM2) and database servers (VM3, VM4). You need to allow only the web servers to connect to the database servers over TCP port 1433, without referencing individual IP addresses in rules.\n\nWhich four actions should you perform in sequence?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Add the network interfaces of VM1 and VM2 to the web ASG, and the network interfaces of VM3 and VM4 to the database ASG."
+     },
+     {
+      "label": "B",
+      "text": "Associate NSG1 with Subnet1."
+     },
+     {
+      "label": "C",
+      "text": "Create an application security group for the web servers and another for the database servers in the region of VNet1."
+     },
+     {
+      "label": "D",
+      "text": "Create a network security group named NSG1 and add an inbound rule that uses the web ASG as the source, the database ASG as the destination, and TCP port 1433."
+     }
+    ],
+    "correct": [
+     "C",
+     "A",
+     "D",
+     "B"
+    ],
+    "required": 4,
+    "explanation": "The ASGs must exist first, then VM network interfaces are added to them so that they group the workloads. NSG1 is then created with an inbound rule that references the ASGs as source and destination, and finally NSG1 is associated with Subnet1 so the rule is enforced."
+   },
+   "doc_query": "Application security groups Azure virtual network",
+   "link": "https://learn.microsoft.com/azure/networking/design-guide/network-application-security-groups",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says ASGs group network interfaces by role and are used as the source or destination in NSG rules instead of IP addresses. It also says an NSG is applied to a subnet. That matches the order: create the ASGs, add the NICs, create the NSG rule, then associate the NSG with Subnet1. The page doesn't state a strict order between adding the NICs and creating the rule, but the ASGs must exist before a rule can reference them.",
+    "in": 6879,
+    "out": 625
+   }
+  },
+  {
+   "slot": 9,
+   "objective": "Implement Defender for Storage threat protection configurations",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Secure storage, databases, and networking",
+    "section": "Implement security for storage accounts",
+    "objective": "Implement Defender for Storage threat protection configurations",
+    "doc_query": "Defender for Storage malware scanning",
+    "type": "single",
+    "stem": "Litware has an Azure subscription named Sub1 that contains 30 storage accounts used for file uploads from external partners. Microsoft Defender for Cloud is enabled on Sub1.\n\nYou need to ensure that every blob uploaded to the storage accounts is automatically scanned for malware. The solution must limit scanning costs to 1,000 GB per month for each storage account.\n\nWhat should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Enable the Defender for Storage plan on Sub1 with only activity monitoring and sensitive data threat detection turned on."
+     },
+     {
+      "label": "B",
+      "text": "Enable the Defender Cloud Security Posture Management (CSPM) plan on Sub1 and configure a cost cap on each storage account."
+     },
+     {
+      "label": "C",
+      "text": "Enable the Defender for Storage plan on Sub1, turn on malware scanning, and set the monthly scanning cap per storage account to 1,000 GB."
+     },
+     {
+      "label": "D",
+      "text": "Enable the Defender for Servers Plan 2 plan on Sub1 and configure the agentless malware scanning setting."
+     }
+    ],
+    "correct": [
+     "C"
+    ],
+    "required": 1,
+    "explanation": "Malware scanning is a feature of the Defender for Storage plan that scans blobs on upload, and it includes a configurable monthly cap in GB per storage account to control costs. Activity monitoring and sensitive data detection do not scan blob content for malware. Defender for Servers covers virtual machines, and CSPM provides posture management without malware scanning or scan caps."
+   },
+   "doc_query": "Defender for Storage malware scanning",
+   "link": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/introduction-malware-scanning",
+   "exact_link": true,
+   "judge": {
+    "verdict": "not_covered",
+    "reason": "The page says Defender for Storage malware scanning automatically scans blobs on upload, which partly supports C. It never mentions a monthly GB scanning cap per storage account, so it can't confirm the cost-limit requirement that sets C apart from the other options.",
+    "in": 6526,
+    "out": 290
+   }
+  },
+  {
+   "slot": 10,
+   "objective": "Configure Defender for Databases protection across Azure database services",
+   "type": "multiple",
+   "format_ok": true,
+   "question": {
+    "area": "Secure storage, databases, and networking",
+    "section": "Implement security for databases",
+    "objective": "Configure Defender for Databases protection across Azure database services",
+    "doc_query": "Microsoft Defender for Databases enable protection",
+    "type": "multiple",
+    "stem": "Adatum has an Azure subscription named Sub1 that contains the following resources:\n\n- SQL1: an Azure SQL Database\n- PG1: an Azure Database for PostgreSQL flexible server\n- Cosmos1: an Azure Cosmos DB for NoSQL account\n- Web1: an Azure App Service web app\n\nMicrosoft Defender for Cloud is enabled on Sub1 without any paid plans. You need to enable threat protection for SQL1, PG1, and Cosmos1. The solution must not enable protection for resource types that are not in Sub1.\n\nWhich three Defender for Databases plans should you enable? Each correct answer presents part of the solution. (Choose three.)",
+    "options": [
+     {
+      "label": "A",
+      "text": "Azure SQL Databases"
+     },
+     {
+      "label": "B",
+      "text": "Azure Cosmos DB"
+     },
+     {
+      "label": "C",
+      "text": "Open-source relational databases"
+     },
+     {
+      "label": "D",
+      "text": "SQL servers on machines"
+     },
+     {
+      "label": "E",
+      "text": "App Service"
+     }
+    ],
+    "correct": [
+     "A",
+     "B",
+     "C"
+    ],
+    "required": 3,
+    "explanation": "Defender for Databases provides separate protection for Azure SQL Databases, open-source relational databases such as PostgreSQL, and Azure Cosmos DB, which match SQL1, PG1, and Cosmos1. SQL servers on machines protects SQL Server on VMs or Arc-enabled servers, which are not present. App Service is a separate Defender plan and is not part of Defender for Databases."
+   },
+   "doc_query": "Microsoft Defender for Databases enable protection",
+   "link": "https://learn.microsoft.com/azure/defender-for-cloud/tutorial-enable-databases-plan",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page lists four separate Defender for Databases plans: Azure SQL Databases (protects Azure SQL), Open-Source Relational Databases (PostgreSQL and MySQL), Azure Cosmos DB, and SQL Servers on Machines (SQL on VMs or physical servers). That makes A, B and C the right plans for SQL1, PG1 and Cosmos1, and D is not needed.",
+    "in": 2182,
+    "out": 208
+   }
+  },
+  {
+   "slot": 11,
+   "objective": "Configure security for an Azure Virtual WAN",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Secure storage, databases, and networking",
+    "section": "Implement security for Azure network services",
+    "objective": "Configure security for an Azure Virtual WAN",
+    "doc_query": "Secured virtual hub Azure Firewall Manager",
+    "type": "single",
+    "stem": "Contoso uses an Azure Virtual WAN named vwan1 with two hubs. Branch offices connect to the hubs by using site-to-site VPN, and 40 spoke virtual networks are connected to the hubs. Contoso must inspect all internet-bound traffic from the branches and the spoke virtual networks by using Azure Firewall. The firewall rules must be managed centrally, and the solution must minimize administrative effort.\n\nWhat should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Deploy Azure Firewall in each spoke virtual network and configure user-defined routes in every spoke"
+     },
+     {
+      "label": "B",
+      "text": "Deploy Azure Front Door and route branch internet traffic through the Front Door profile"
+     },
+     {
+      "label": "C",
+      "text": "Convert each hub into a secured virtual hub by deploying Azure Firewall with Azure Firewall Manager, and configure routing intent for internet traffic"
+     },
+     {
+      "label": "D",
+      "text": "Associate a network security group with each virtual hub and add outbound deny rules"
+     }
+    ],
+    "correct": [
+     "C"
+    ],
+    "required": 1,
+    "explanation": "A secured virtual hub is a Virtual WAN hub with Azure Firewall deployed and managed through Azure Firewall Manager. Routing intent/internet traffic policies send branch and spoke traffic through the hub firewall without per-spoke UDRs. Per-spoke firewalls add significant administrative effort, NSGs cannot be associated with a virtual hub, and Azure Front Door handles inbound web traffic, not outbound inspection."
+   },
+   "doc_query": "Secured virtual hub Azure Firewall Manager",
+   "link": "https://learn.microsoft.com/azure/firewall-manager/secure-cloud-network",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says Firewall Manager can create or upgrade Virtual WAN hubs into secured virtual hubs and route traffic to the firewall automatically, with no UDRs needed. Firewall policies centrally manage rules for one or more hubs, and the Security configuration step sends Internet traffic through Azure Firewall and enables routing intent. This supports option C.",
+    "in": 5654,
+    "out": 315
+   }
+  },
+  {
+   "slot": 12,
+   "objective": "Identify overexposure of data in SharePoint",
+   "type": "solution",
+   "format_ok": true,
+   "question": {
+    "area": "Secure compute",
+    "section": "Implement security for AI",
+    "objective": "Identify overexposure of data in SharePoint",
+    "doc_query": "SharePoint data access governance reports oversharing",
+    "type": "solution",
+    "stem": "Adatum plans to deploy Microsoft 365 Copilot. Many SharePoint Online sites were created years ago, and the security team must identify sites whose content is overshared with the entire organization before Copilot is rolled out.\n\nSolution: You enable Restricted Content Discovery on the SharePoint sites that you suspect are overshared.\n\nDoes this meet the goal?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Yes"
+     },
+     {
+      "label": "B",
+      "text": "No"
+     }
+    ],
+    "correct": [
+     "B"
+    ],
+    "required": 1,
+    "explanation": "Restricted Content Discovery limits which sites are surfaced by search and Copilot, but it does not identify overexposed content. To identify oversharing, use SharePoint Advanced Management data access governance reports (for example, content shared with Everyone except external users or Anyone links) or a Microsoft Purview DSPM for AI oversharing assessment."
+   },
+   "doc_query": "SharePoint data access governance reports oversharing",
+   "link": "https://learn.microsoft.com/en-us/sharepoint/site-access-review",
+   "exact_link": true,
+   "judge": {
+    "verdict": "not_covered",
+    "reason": "The page says data access governance reports, such as \"Content shared with 'Everyone except external users'\" and sharing link reports, are what identify overshared sites. It never mentions Restricted Content Discovery, so it can't confirm or rule out whether that feature meets the goal.",
+    "in": 3780,
+    "out": 423
+   }
+  },
+  {
+   "slot": 13,
+   "objective": "Implement and configure disk encryption",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Secure compute",
+    "section": "Implement security for servers and virtual machines (VMs)",
+    "objective": "Implement and configure disk encryption",
+    "doc_query": "Azure encryption at host disk encryption set",
+    "type": "single",
+    "stem": "Fabrikam hosts Windows Server VMs in Azure. VM1 must have its OS disk, data disks, temporary disk, and disk caches encrypted end to end, starting at the VM host. The encryption keys must be customer-managed and stored in Azure Key Vault. The solution must not require an encryption extension or in-guest BitLocker configuration on the VM.\n\nWhat should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Rely on server-side encryption with platform-managed keys for the managed disks"
+     },
+     {
+      "label": "B",
+      "text": "Enable confidential disk encryption on VM1 by using a disk encryption set"
+     },
+     {
+      "label": "C",
+      "text": "Enable Azure Disk Encryption on VM1 by using a Key Vault key encryption key"
+     },
+     {
+      "label": "D",
+      "text": "Enable encryption at host on VM1 and encrypt the managed disks by using a disk encryption set that references a key in Key Vault"
+     }
+    ],
+    "correct": [
+     "D"
+    ],
+    "required": 1,
+    "explanation": "Encryption at host encrypts data on the VM host, including temporary disks and disk caches, and a disk encryption set with a Key Vault key provides customer-managed keys without any guest agent. Azure Disk Encryption uses the BitLocker VM extension in the guest. Platform-managed server-side encryption does not use customer-managed keys or cover temp disks and caches. Confidential disk encryption applies only to confidential VMs."
+   },
+   "doc_query": "Azure encryption at host disk encryption set",
+   "link": "https://learn.microsoft.com/en-us/azure/virtual-machines/disks-enable-host-based-encryption-portal",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says encryption at host encrypts data on the VM host end to end, including temp disks and OS/data disk caches. It also says you can use customer-managed keys through a Key Vault key and a disk encryption set, chosen on the Disks pane with no in-guest setup. One caveat: the page says temp disks are always encrypted with platform-managed keys, but D is still the only option that meets the requirements.",
+    "in": 3891,
+    "out": 494
+   }
+  },
+  {
+   "slot": 14,
+   "objective": "Detect misconfigurations and runtime risks in container workloads by using Defender for Containers",
+   "type": "multiple",
+   "format_ok": true,
+   "question": {
+    "area": "Secure compute",
+    "section": "Implement security for application platform services",
+    "objective": "Detect misconfigurations and runtime risks in container workloads by using Defender for Containers",
+    "doc_query": "Microsoft Defender for Containers overview",
+    "type": "multiple",
+    "stem": "Northwind Traders runs an Azure Kubernetes Service (AKS) cluster named AKS1 in Sub1. The security team must detect misconfigurations in the cluster and detect runtime threats in running containers by using Microsoft Defender for Cloud. The solution must use capabilities that are part of Defender for Containers.\n\nWhich three actions should you perform? Each correct answer presents part of the solution. (Choose three.)",
+    "options": [
+     {
+      "label": "A",
+      "text": "Enable agentless discovery for Kubernetes in the Defender for Containers plan settings"
+     },
+     {
+      "label": "B",
+      "text": "Enable the Defender for Resource Manager plan on Sub1"
+     },
+     {
+      "label": "C",
+      "text": "Enable the Defender for Containers plan on Sub1"
+     },
+     {
+      "label": "D",
+      "text": "Enable the Defender for Servers Plan 2 plan on Sub1 to cover the AKS nodes"
+     },
+     {
+      "label": "E",
+      "text": "Deploy the Defender sensor to AKS1"
+     }
+    ],
+    "correct": [
+     "A",
+     "C",
+     "E"
+    ],
+    "required": 3,
+    "explanation": "The Defender for Containers plan must be enabled; the Defender sensor provides runtime threat detection on the nodes; and agentless discovery for Kubernetes uses the Kubernetes API to inventory the cluster and surface posture and misconfiguration findings. Defender for Resource Manager monitors management operations, and Defender for Servers does not provide container-aware runtime or posture protection for AKS workloads."
+   },
+   "doc_query": "Microsoft Defender for Containers overview",
+   "link": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-containers-introduction",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page describes enabling the Defender for Containers plan. It lists agentless discovery for Kubernetes, which provides API-based discovery of clusters, configurations, and deployments, as a posture management capability. It also says runtime threat detection uses sensor-based coverage that requires the Defender sensor. That supports A, C and E.",
+    "in": 5219,
+    "out": 309
+   }
+  },
+  {
+   "slot": 15,
+   "objective": "Enable and configure real-time protection for Microsoft Copilot Studio agents",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Secure compute",
+    "section": "Implement security for AI",
+    "objective": "Enable and configure real-time protection for Microsoft Copilot Studio agents",
+    "doc_query": "Copilot Studio external threat detection Defender",
+    "type": "single",
+    "stem": "Litware builds agents in Microsoft Copilot Studio that call tools and connectors. The security team must analyze agent tool invocations in real time during runtime and block suspicious actions before they run, by using Microsoft Defender.\n\nWhat should you do?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Create a Power Platform data policy that blocks the connectors used by the agents"
+     },
+     {
+      "label": "B",
+      "text": "In the Power Platform admin center, configure threat detection for the environment to use Microsoft Defender as the external threat detection provider"
+     },
+     {
+      "label": "C",
+      "text": "Create a Microsoft Defender for Cloud Apps session policy for the Copilot Studio web app"
+     },
+     {
+      "label": "D",
+      "text": "Configure a Microsoft Entra Conditional Access policy that requires compliant devices for agent makers"
+     }
+    ],
+    "correct": [
+     "B"
+    ],
+    "required": 1,
+    "explanation": "Copilot Studio supports external threat detection and protection for agents. Configuring the environment in the Power Platform admin center to use Microsoft Defender lets Defender evaluate planned tool invocations at runtime and block suspicious ones. Data policies govern which connectors can be used but do not analyze runtime behavior, and session policies and Conditional Access control user access to the maker portal, not agent runtime actions."
+   },
+   "doc_query": "Copilot Studio external threat detection Defender",
+   "link": "https://learn.microsoft.com/en-us/microsoft-copilot-studio/external-security-provider",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page explains that you set up external threat detection for each environment in the Power Platform admin center (Security > Threat detection > Additional threat detection). Microsoft Defender is listed as a provider option. Once set up, the system checks each tool the agent is about to run at runtime and can block it before it executes.",
+    "in": 7467,
+    "out": 168
+   }
+  },
+  {
+   "slot": 16,
+   "objective": "Enable and enforce use of just-in-time (JIT) VM access",
+   "type": "ordering",
+   "format_ok": true,
+   "question": {
+    "area": "Secure compute",
+    "section": "Implement security for servers and virtual machines (VMs)",
+    "objective": "Enable and enforce use of just-in-time (JIT) VM access",
+    "doc_query": "Enable just-in-time access on VMs",
+    "type": "ordering",
+    "stem": "Contoso has an Azure subscription named Sub1 that contains a virtual machine named VM1. Administrators currently connect to VM1 over RDP (port 3389) through a permanent network security group (NSG) allow rule. Microsoft Defender for Servers is not enabled on Sub1.\n\nYou need to ensure that RDP access to VM1 is available only on request, for a limited time, and only from the requester's IP address.\n\nWhich four actions should you perform in sequence? (Arrange the actions in the correct order.)",
+    "options": [
+     {
+      "label": "A",
+      "text": "Enable Microsoft Defender for Servers Plan 2 on Sub1."
+     },
+     {
+      "label": "B",
+      "text": "Submit a Request access operation for VM1 in Defender for Cloud specifying port 3389 and the required duration."
+     },
+     {
+      "label": "C",
+      "text": "In Microsoft Defender for Cloud, open Just-in-time VM access and select VM1 on the Not configured tab."
+     },
+     {
+      "label": "D",
+      "text": "Configure port 3389 with a maximum request time and allowed source IP setting, and then save the JIT policy."
+     }
+    ],
+    "correct": [
+     "A",
+     "C",
+     "D",
+     "B"
+    ],
+    "required": 4,
+    "explanation": "Just-in-time VM access requires Defender for Servers Plan 2, so the plan is enabled first. You then select the unprotected VM in the Just-in-time VM access page, define the port rules (port, protocol, allowed source IPs, maximum request time) and save, which causes Defender for Cloud to manage deny rules in the NSG. Only after the policy exists can users request time-limited access to the port."
+   },
+   "doc_query": "Enable just-in-time access on VMs",
+   "link": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/enable-just-in-time-access",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page lists enabling Defender for Servers Plan 2 as a prerequisite. Next, you mark VMs on the \"Not configured\" tab of Just-in-time VM access and configure ports (protocol, allowed source IPs, maximum request time), then select Save. After that, you request access from the Configured tab by choosing ports, source IP and time window. This matches A, C, D, B.",
+    "in": 5767,
+    "out": 333
+   }
+  },
+  {
+   "slot": 17,
+   "objective": "Identify security risks by using Defender CSPM",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Manage and monitor security posture",
+    "section": "Manage security posture by using Defender for Cloud",
+    "objective": "Identify security risks by using Defender CSPM",
+    "doc_query": "Identify and remediate attack paths Defender CSPM",
+    "type": "single",
+    "stem": "Fabrikam runs workloads in Azure and AWS, and both environments are connected to Microsoft Defender for Cloud. The Defender CSPM plan is enabled. The security team needs to identify chains of exploitable weaknesses, such as an internet-exposed virtual machine with a vulnerability that has a path to a storage account holding sensitive data. The results must be prioritized so that the team can remediate the highest-impact risks first.\n\nWhat should the team use?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Attack path analysis in Defender CSPM"
+     },
+     {
+      "label": "B",
+      "text": "The regulatory compliance dashboard in Defender for Cloud"
+     },
+     {
+      "label": "C",
+      "text": "Azure Policy compliance results for Sub1"
+     },
+     {
+      "label": "D",
+      "text": "The secure score in Defender for Cloud"
+     }
+    ],
+    "correct": [
+     "A"
+    ],
+    "required": 1,
+    "explanation": "Attack path analysis in Defender CSPM correlates exposure, vulnerabilities, identities and data access to show prioritized, exploitable paths across Azure and AWS. Secure score measures overall posture by recommendation and does not show chained paths. The regulatory compliance dashboard and Azure Policy compliance assess conformance to standards and policies, not attack chains."
+   },
+   "doc_query": "Identify and remediate attack paths Defender CSPM",
+   "link": "https://learn.microsoft.com/azure/defender-for-cloud/how-to-manage-attack-path",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says Defender for Cloud's attack path analysis, which requires Defender CSPM, finds attack paths in multicloud environments. These paths start outside the organization and lead to critical targets. It also says attack paths are sorted by risk level so the biggest risks can be fixed first, which supports A.",
+    "in": 3586,
+    "out": 170
+   }
+  },
+  {
+   "slot": 18,
+   "objective": "Create and connect workspaces in Microsoft Sentinel",
+   "type": "multiple",
+   "format_ok": true,
+   "question": {
+    "area": "Manage and monitor security posture",
+    "section": "Implement activity and event collection in Microsoft Sentinel",
+    "objective": "Create and connect workspaces in Microsoft Sentinel",
+    "doc_query": "Enable Microsoft Sentinel and initial features",
+    "type": "multiple",
+    "stem": "Adatum plans to use Microsoft Sentinel as its SIEM. A new Microsoft Sentinel instance must be deployed to a new workspace named Workspace1 in a subscription named Sub1. The user performing the deployment, Admin1, currently has no Azure role assignments in Sub1.\n\nWhich three actions should you perform? Each correct answer presents part of the solution. (Choose three.)",
+    "options": [
+     {
+      "label": "A",
+      "text": "Create an Azure Data Explorer cluster to host the Microsoft Sentinel data."
+     },
+     {
+      "label": "B",
+      "text": "Assign Admin1 the Microsoft Sentinel Reader role on Workspace1."
+     },
+     {
+      "label": "C",
+      "text": "Add Microsoft Sentinel to Workspace1."
+     },
+     {
+      "label": "D",
+      "text": "Assign Admin1 the Contributor role on Sub1."
+     },
+     {
+      "label": "E",
+      "text": "Create a Log Analytics workspace named Workspace1 in Sub1."
+     }
+    ],
+    "correct": [
+     "C",
+     "D",
+     "E"
+    ],
+    "required": 3,
+    "explanation": "Microsoft Sentinel is enabled on a Log Analytics workspace, so you create Workspace1 and then add Microsoft Sentinel to it. Enabling Sentinel requires Contributor permissions on the subscription where the workspace resides. Azure Data Explorer is not required for onboarding, and the Microsoft Sentinel Reader role is read-only and cannot enable the service."
+   },
+   "doc_query": "Enable Microsoft Sentinel and initial features",
+   "link": "https://learn.microsoft.com/azure/sentinel/enable-sentinel-features-content",
+   "exact_link": true,
+   "judge": {
+    "verdict": "not_covered",
+    "reason": "The page says to enable Microsoft Sentinel on the planned Log Analytics workspace, which supports C and E. It says nothing about the permissions needed to enable Sentinel, such as Contributor on the subscription or the Sentinel Reader role, so it can't confirm D or rule out B.",
+    "in": 1819,
+    "out": 321
+   }
+  },
+  {
+   "slot": 19,
+   "objective": "Configure workspaces for Security Copilot",
+   "type": "single",
+   "format_ok": true,
+   "question": {
+    "area": "Manage and monitor security posture",
+    "section": "Implement Microsoft Security Copilot",
+    "objective": "Configure workspaces for Security Copilot",
+    "doc_query": "Get started with Microsoft Security Copilot",
+    "type": "single",
+    "stem": "Litware wants to give its security operations team access to Microsoft Security Copilot. No Security Copilot workspace exists yet. Litware requires that costs are based on the amount of provisioned capacity and billed through Azure subscription Sub1, rather than per-user licensing.\n\nYou need to prepare the environment so that a Security Copilot workspace can be created.\n\nWhat should you do first?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Provision Security Copilot capacity by using security compute units (SCUs) in Sub1."
+     },
+     {
+      "label": "B",
+      "text": "Onboard all devices to Microsoft Defender for Endpoint."
+     },
+     {
+      "label": "C",
+      "text": "Create a Log Analytics workspace and enable Microsoft Sentinel on it."
+     },
+     {
+      "label": "D",
+      "text": "Assign a Microsoft 365 E5 license to each SOC analyst."
+     }
+    ],
+    "correct": [
+     "A"
+    ],
+    "required": 1,
+    "explanation": "Security Copilot is billed through provisioned capacity measured in security compute units, created as an Azure resource in a subscription and resource group. A workspace is then associated with that capacity. Per-user Microsoft 365 licensing does not provide Security Copilot capacity, and Sentinel or Defender for Endpoint are optional data sources or plugins, not prerequisites for creating a workspace."
+   },
+   "doc_query": "Get started with Microsoft Security Copilot",
+   "link": "https://learn.microsoft.com/copilot/security/get-started-security-copilot",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says organizations without Microsoft 365 E5/E7 \"must provision Security Compute Units (SCUs) to enable Security Copilot,\" which fits Litware's requirement for capacity-based billing, so A is right. The page doesn't mention Azure subscriptions, and it contradicts part of the explanation: Security Copilot is included with E5/E7. D is still wrong because Litware wants capacity billing, not per-user licensing.",
+    "in": 3154,
+    "out": 447
+   }
+  },
+  {
+   "slot": 20,
+   "objective": "Enable and configure Defender for Cloud workload protection plans",
+   "type": "solution",
+   "format_ok": true,
+   "question": {
+    "area": "Manage and monitor security posture",
+    "section": "Manage security posture by using Defender for Cloud",
+    "objective": "Enable and configure Defender for Cloud workload protection plans",
+    "doc_query": "Microsoft Defender for Containers vulnerability assessment",
+    "type": "solution",
+    "stem": "Northwind Traders has an Azure subscription named Sub1 that contains an Azure Container Registry named ACR1. The security team must detect vulnerabilities in the container images stored in ACR1.\n\nSolution: You enable the Microsoft Defender for Servers Plan 2 plan on Sub1.\n\nDoes this meet the goal?",
+    "options": [
+     {
+      "label": "A",
+      "text": "Yes"
+     },
+     {
+      "label": "B",
+      "text": "No"
+     }
+    ],
+    "correct": [
+     "B"
+    ],
+    "required": 1,
+    "explanation": "Defender for Servers protects servers and virtual machines, including machines running containers as hosts, but it does not scan images in Azure Container Registry. Vulnerability assessment of registry images is provided by the Defender for Containers plan, which you would need to enable on Sub1."
+   },
+   "doc_query": "Microsoft Defender for Containers vulnerability assessment",
+   "link": "https://learn.microsoft.com/azure/defender-for-cloud/agentless-vulnerability-assessment-azure",
+   "exact_link": true,
+   "judge": {
+    "verdict": "correct",
+    "reason": "The page says container vulnerability assessment, including registry scanning of ACR images, \"is available through Defender for Containers and, for supported scenarios, Defender CSPM.\" It doesn't list Defender for Servers, so enabling Servers Plan 2 doesn't meet the goal and the answer is No.",
+    "in": 2530,
+    "out": 356
+   }
+  }
+ ]
+}

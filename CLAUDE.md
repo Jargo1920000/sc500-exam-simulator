@@ -39,7 +39,7 @@ SC500_MOCK=1 python3 evals/run_eval.py    # no API calls, checks the script only
 
 `evals/objectives.json` is fixed. Changing it breaks comparison with earlier runs in `evals/results/`.
 
-There is no test suite, linter or build step. Check app changes by running the app with `SC500_MOCK=1`.
+Offline tests for Learn link picking: `python3 tests/test_docs.py` (or `pytest tests`). There is no linter or build step. Check other app changes by running the app with `SC500_MOCK=1`.
 
 Labs (run from `terraform/`): `terraform init -backend-config=backend.hcl`, then `terraform plan -out lab.tfplan && terraform apply lab.tfplan`.
 
@@ -71,5 +71,5 @@ Labs: `labs.json` holds all lab content (scenarios, tasks, steps, checks, clean-
 ## Gotchas
 
 - **Bank changes:** the bank drops saved questions whose objective is no longer in the guide. Keep that filtering in place if you change the bank format.
-- **Git-ignored:** `.env`, `sessions/`, `doc_links.json` (the Learn link cache), `deploy/.appname`, `deploy/.paused`, `terraform/terraform.tfvars`, `terraform/backend.hcl` and Terraform state.
+- **Git-ignored:** `.env`, `sessions/`, `doc_links*.json` (the Learn link cache), `deploy/.appname`, `deploy/.paused`, `terraform/terraform.tfvars`, `terraform/backend.hcl` and Terraform state.
 - **`bank.json` is not ignored.** If it exists, the deploy workflow ships it, and it seeds the hosted bank on the first deploy.
