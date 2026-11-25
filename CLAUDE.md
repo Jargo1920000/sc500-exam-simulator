@@ -71,5 +71,5 @@ Labs: `labs.json` holds all lab content (scenarios, tasks, steps, checks, clean-
 ## Gotchas
 
 - **Bank changes:** the bank drops saved questions whose objective is no longer in the guide. Keep that filtering in place if you change the bank format.
-- **Git-ignored:** `.env`, `sessions/`, `doc_links*.json` (the Learn link cache), `deploy/.appname`, `deploy/.paused`, `terraform/terraform.tfvars`, `terraform/backend.hcl` and Terraform state.
+- **Git-ignored:** `.env`, `sessions/`, `doc_links*.json` (the Learn link cache), `deploy/.appname`, `deploy/.rg`, `deploy/.paused`, `terraform/terraform.tfvars`, `terraform/backend.hcl` and Terraform state.
 - **`bank.json` is not ignored.** If it exists, the deploy workflow ships it, and it seeds the hosted bank on the first deploy.

@@ -12,6 +12,7 @@ terraform/*.tfplan
 *.tfstate
 *.tfstate.*
 deploy/.appname
+deploy/.rg
 deploy/.paused
 bank_test.json
 .DS_Store
