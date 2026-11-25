@@ -80,9 +80,9 @@ def write_batch(items: list[dict]) -> list[dict]:
     try:
         raw = ([agent._mock_question(it) for it in items] if agent.MOCK
                else agent._call(agent.TOOL, agent._brief(items), 16000).get("questions", []))
-    except Exception as exc:
+    except Exception as exc:  # API, auth or network error: not a format failure, so the run is not saved
         print(f"  [eval] batch failed: {type(exc).__name__}: {exc}", flush=True)
-        raw = []
+        return [{"slot": it["slot"], "error": f"{type(exc).__name__}: {exc}"} for it in items]
     by_slot = {r["slot"]: r for r in raw if isinstance(r, dict) and isinstance(r.get("slot"), int)}
     out = []
     for it in items:
@@ -202,6 +202,11 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=5) as pool:
         rows = [r for batch in pool.map(write_batch, batches) for r in batch]
     write_tokens = {"input": agent.USAGE["input"] - start["input"], "output": agent.USAGE["output"] - start["output"]}
+    failed = [r for r in rows if "error" in r]
+    if failed:
+        print(f"\n{len(failed)} of {len(rows)} questions hit an API error (first: {failed[0]['error']}). "
+              "Nothing saved, so the comparison with earlier runs stays clean. Fix the error and run again.")
+        return 1
 
     with ThreadPoolExecutor(max_workers=5) as pool:
         checked = list(pool.map(check, [r for r in rows if r["format_ok"]]))
