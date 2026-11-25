@@ -45,19 +45,32 @@ if [ -z "$SP_ID" ]; then
   echo "Created service principal"
 fi
 
-SUBJECT="repo:${REPO}:ref:refs/heads/${BRANCH}"
-if az ad app federated-credential list --id "$APP_ID" --query "[?subject=='$SUBJECT'].name" -o tsv | grep -q .; then
-  echo "Federated credential for $SUBJECT already exists"
+# GitHub sends the token subject either by name or with the owner and repo IDs
+# (repo:owner@123/name@456:ref:...). Trust both forms so sign-in works with either.
+SUBJECTS=("repo:${REPO}:ref:refs/heads/${BRANCH}")
+OWNER_ID=$(gh api "users/${REPO%%/*}" -q .id 2>/dev/null || true)
+REPO_ID=$(gh api "repos/${REPO}" -q .id 2>/dev/null || true)
+if [ -n "$OWNER_ID" ] && [ -n "$REPO_ID" ]; then
+  SUBJECTS+=("repo:${REPO%%/*}@${OWNER_ID}/${REPO#*/}@${REPO_ID}:ref:refs/heads/${BRANCH}")
 else
-  az ad app federated-credential create --id "$APP_ID" -o none --parameters "{
-    \"name\": \"github-${BRANCH}\",
-    \"issuer\": \"https://token.actions.githubusercontent.com\",
-    \"subject\": \"${SUBJECT}\",
-    \"description\": \"GitHub Actions deploy from ${REPO} ${BRANCH}\",
-    \"audiences\": [\"api://AzureADTokenExchange\"]
-  }"
-  echo "Added federated credential for $SUBJECT"
+  echo "Could not read the GitHub IDs (sign in with 'gh auth login'). Adding the name-based subject only."
 fi
+SUFFIX=""
+for SUBJECT in "${SUBJECTS[@]}"; do
+  if az ad app federated-credential list --id "$APP_ID" --query "[?subject=='$SUBJECT'].name" -o tsv | grep -q .; then
+    echo "Federated credential for $SUBJECT already exists"
+  else
+    az ad app federated-credential create --id "$APP_ID" -o none --parameters "{
+      \"name\": \"github-${BRANCH}${SUFFIX}\",
+      \"issuer\": \"https://token.actions.githubusercontent.com\",
+      \"subject\": \"${SUBJECT}\",
+      \"description\": \"GitHub Actions deploy from ${REPO} ${BRANCH}\",
+      \"audiences\": [\"api://AzureADTokenExchange\"]
+    }"
+    echo "Added federated credential for $SUBJECT"
+  fi
+  SUFFIX="-ids"
+done
 
 # The role can fail for a minute while a new service principal spreads. Retry a few times.
 for i in 1 2 3 4 5; do

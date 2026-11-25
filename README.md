@@ -404,7 +404,7 @@ It signs in to Azure with OpenID Connect. GitHub gives the job a short-lived tok
    ```
    It creates or reuses:
    - the app registration `github-sc500-exam-simulator-deploy` and its service principal
-   - a federated credential for `repo:<owner>/<repo>:ref:refs/heads/main`, read from your git remote
+   - federated credentials for `repo:<owner>/<repo>:ref:refs/heads/main`, read from your git remote, and for the same subject with owner and repo IDs (`repo:<owner>@<id>/<repo>@<id>:ref:refs/heads/main`), which GitHub may send instead. The IDs need a signed-in `gh` CLI
    - a **Website Contributor** role on the web app only
 3. Add the values it prints in GitHub, under **Settings > Secrets and variables > Actions**:
 
