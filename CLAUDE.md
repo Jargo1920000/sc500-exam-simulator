@@ -50,7 +50,7 @@ Hosted deploy: `bash deploy/azure.sh create|deploy|logs|status|pause|resume|dele
 The exam pipeline runs across four Python modules:
 
 1. **`guide.py`** scrapes the live SC-500 study guide into areas, weights and objectives. If the page can't be fetched, it falls back to `guide_snapshot.json`, and that exam is labelled unverified.
-2. **`agent.py`** decides what to test. `build_plan` splits questions across areas by their published weights (`allocate`) and picks a question type for each slot (`format_mix`). Claude only writes the content. It is called with forced tool use (`TOOL` / `CASE_TOOL` schemas) in batches of 5. `_shape` validates each returned question and shuffles its options. Mock mode short-circuits here.
+2. **`agent.py`** decides what to test. `build_plan` splits questions across areas by their published weights (`allocate`) and picks a question type for each slot (`format_mix`). Claude only writes the content, in batches of 5 (`BATCH`), through the `TOOL` / `CASE_TOOL` schemas. `tool_choice` is `auto`, because some models reject a forced tool choice, so the prompt asks for the tool call. `_shape` validates each returned question and shuffles its options. Mock mode short-circuits here.
 3. **`app.py`** holds exam state, scoring, the question bank, lab endpoints and an auth middleware.
    - Each exam is held in memory (`EXAMS`) and persisted to `sessions/`.
    - New questions are appended to `bank.json`, keeping only the `KEEP` fields. "Use saved questions" rebuilds an exam from the bank with the same weighting and reshuffled options.
